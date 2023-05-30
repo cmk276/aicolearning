@@ -12,6 +12,11 @@ TM_HETEROGENEUS = Agrupamiento heterogéneo
 TM_HOMOGENEUS = Agrupamiento homogéneo
 """
 from abc import ABC, abstractmethod
+import pandas as pd
+from sklearn.impute import SimpleImputer
+#from sklearn.preprocessing import OrdinalEncoder
+from sklearn import preprocessing
+from sklearn.pipeline import Pipeline
 from random import *
 
 # CONSTANTES
@@ -54,7 +59,8 @@ class TeamMaker(ABC) :
             self.equiposGenerados = list(range(self.numEquipos))
         else:
             raise ValueError("inicializaEquipos: alumnosxEquipo debe ser un valor mayor que 0")
-        
+
+
     def _buscaEquipo(self, alumno = 0):
         """Busca el alumno en los equipos generados y devuelve una lista con el equipo en el que se
         encuentra el alumno y la posición que ocupa dentro del equipo
@@ -83,10 +89,13 @@ class TeamMaker(ABC) :
 
     
     def fijaEquipos (self, equipos = [0]):
+        '''Indicar qué equipos se van a quedar fijos y no se van a modificar en siguientes llamadas a crearEquipos.
+        Si en la lista se envían equipos que no existen, lanza una excepción.
+        '''
         # comprueba que los equipos que se han pasado como parámetro están creados
         for i in equipos:
             if i >= self.numEquipos:
-                raise Exception("fijaEquipos: No existe el equipo a fijar")
+                raise ValueError("fijaEquipos: No existe el equipo a fijar")
         self.equiposFijos = equipos
 
     def _equipoFijo(self, equipo = 0):
@@ -170,9 +179,6 @@ class TMRandom (TeamMaker):
                 indice +=1
                 
 
-
-
-
 class TMKmeans (TeamMaker):
     """Clase TMKmeans
     Implementa un agrupador mediante el algoritmo K-means
@@ -192,21 +198,105 @@ class TMKmeans (TeamMaker):
     def __init(self, alumnos):
         TeamMaker.__init__(self, alumnos)
 
-    def creaEquipos (self, alumnosxEquipo = 1, tipoAgrupamiento = TM_HETEROGENEO):
-        # Estimar los valores vacíos
+    def _codificarCategorias (self):
+        """Devuelve un npArray con las categorías codificadas en números"""
+        
+        print ("Alumnos antes de transformar", self.alumnos)
+        
+        print ("Tamaño del dataset",self.alumnos.shape[1])
+        columnas = self.alumnos.columns
+        print ("obteniendo columnas", columnas)
+        print ("Tipos de las columnas", self.alumnos.dtypes)
+        
+        # Estimar los valores vacíos usando el valor más frequente
+        #imp = SimpleImputer(strategy="most_frequent")
+        #sinnan = imp.fit_transform(self.alumnos)
+        #print("Quitados los NAN\n",sinnan)
+        #self.alumnos[columnas] = sinnan
+        
+        categoriasOrdenadas = []
+        categoriasNoOrdenadas = []
 
-        # Convertir las categorías en datos numéricos
+        for c in columnas:
+            if (self.alumnos[c].dtype=="category"):
+                print ("** categoría **")
+                # comprobamos si es un tipo de dato ordenado
+                if (self.alumnos[c].dtype.ordered):
+                    print("Categoría ordenada")
+                    categoriasOrdenadas.append(c)
+                else:
+                    print ("Categoría NO Ordenada")
+                    categoriasNoOrdenadas.append(c)
+        
+        print ("Categorias ordenadas detectadas:")
+        print (categoriasOrdenadas)
 
+        # Obtenemos un subset de categorías ordenadas
+        co = self.alumnos[categoriasOrdenadas]
+        print ("SUBSET DE CATEGORIAS ORDENADAS",co)
+
+        # Procesamos las categorías ordenadas
+        enc = preprocessing.OrdinalEncoder()
+        co = enc.fit_transform(co)
+        print("***",co)
+
+        self.alumnos[categoriasOrdenadas] = co
+        print("=== Alumnos transformados ===",self.alumnos)
+
+
+        print ("Categorias NO ordenadas detectadas:")
+        print (categoriasNoOrdenadas)
+
+        # Obtenemos un subset de categorías ordenadas
+        cno = self.alumnos[categoriasNoOrdenadas]
+        print ("SUBSET DE CATEGORIAS NO ORDENADAS",cno)
+        # Si son categorías binarias, elimina una de las dos opciones que crea para reducir los datos    
+        enc = preprocessing.OneHotEncoder(drop='if_binary',handle_unknown='infrequent_if_exist')    
+        cno = enc.fit_transform(cno).toarray()
+        print("===== CATEGORIAS NO ORDENADAS TRANSFORMADAS====\n")
+        print(cno)   
+
+        print ("\nCategorías utilizadas por el OneHotEncoder\n")
+        print(enc.get_feature_names_out()) 
+        #Añadimos a los alumnos las nuevas categorías generadas
+        self.alumnos[enc.get_feature_names_out()] = cno
+        #Eliminamos las categorías no ordenadas originales
+        self.alumnos=self.alumnos.drop(categoriasNoOrdenadas,axis=1)
+            
+
+            # Preparamos el pipeline para trabajar con el array de alumnos
+
+            # Estimar los valores vacíos usando el valor más frequente
+            # Convertir las categorías en datos numéricos
+            #steps = [("codificador", OrdinalEncoder()),("imputador", SimpleImputer(strategy="most_frequent"))]
+            #enc = Pipeline(steps)
+            #alumnosAordenar = enc.fit_transform(self.alumnos)
+            #print ("Alumnos procesados", alumnosAordenar)
+
+        
+    def creaEquipos (self, alumnosxEquipo = 1, tipoAgrupamiento = TM_HETEROGENEO, codificarCategorias = True):
+        """TMKMeans.creaEquipos: Crea equipos usando el algoritmo K-Means"""
+        TeamMaker.creaEquipos(self, alumnosxEquipo)    
+        
+        if (len(self.equiposFijos)==0):
+            #No hay equipos generados fijos
+            self._inicializaEquipos(alumnosxEquipo)
+
+            if codificarCategorias:
+                # Codificamos las categorías
+                alumnosAagrupar = self._codificarCategorias()
+            else:
+                # **** Hay que convertirlo a Numpy
+                alumnosAagrupar = self.alumnos
+
+        else:
+            # Extraer solo los alumnos que no pertenecen a equipos fijados
+            pass
         # Realizar el algoritmo de clustering
 
-        # Equilibrar los equipos
-        pass
-
-    def fijaEquipos (self):
-        pass
-
-    def intercambiaAlumnos (self):
-        pass
-
-    def eliminaEquipos (self):
-        pass
+        if (tipoAgrupamiento == TM_HETEROGENEO):
+            # Equilibrar los equipos si el tipo de agrupamiento es TM_HETEROGENEO
+            print("agrupamiento Heterogeneo")
+        else:
+            print("Agrumapiento homogeneo")
+        
