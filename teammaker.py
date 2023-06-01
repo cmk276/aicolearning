@@ -13,6 +13,9 @@ TM_HOMOGENEUS = Agrupamiento homogéneo
 """
 from abc import ABC, abstractmethod
 import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.compose import make_column_selector as selector
+from sklearn.cluster import KMeans
 from sklearn.impute import SimpleImputer
 #from sklearn.preprocessing import OrdinalEncoder
 from sklearn import preprocessing
@@ -186,117 +189,145 @@ class TMKmeans (TeamMaker):
     Realiza agrupamientos homogéneos y heterogéneos en función de las características de los alumnos
     
     Datos de entrada
-    alumnos: numpy array con las siguientes características:
+    alumnos: Pandas dataset con las siguientes características:
         - Debe tener el valor np.nan para los valores desconocidos
-        - Puede contener valores numéricos o cadenas, que van a ser tratadas como categorías
+        - Las columnas que son categorías deben estar 
     
     Procesado de datos
-        - Si en el np.array se detectan categorías con formato de texto, se transforman a datos numéricos
+        - Antes de realizar el agrupamiento, se procesan los datos aplicando los siguientes cambios en el pipeline
+        - Columnas numéricas: se sustituye el valor nulo por el más frecuente
+        - Categorías ordenadas: se aplica un OrdinalEncoder convirtiendo a categorías numéricas
+        - Categorías no ordenadas: se aplica un OneHotEncoder creando nuevas columnas para cada posible valor de la categorías
+            En las categorías binarias se elimina una de las dos columnas generadas.
         
     
     """
-    def __init(self, alumnos):
+    def __init__(self, alumnos):
         TeamMaker.__init__(self, alumnos)
+        self._datasetProcesado = False
 
-    def _codificarCategorias (self):
-        """Devuelve un npArray con las categorías codificadas en números"""
+    def _procesarDataset(self):
+        # Obtenemos las columnas de cada tipo
         
-        print ("Alumnos antes de transformar", self.alumnos)
+        # Columnas numéricas
+        cNumericas = selector(dtype_exclude="category")(self.alumnos)
         
-        print ("Tamaño del dataset",self.alumnos.shape[1])
-        columnas = self.alumnos.columns
-        print ("obteniendo columnas", columnas)
-        print ("Tipos de las columnas", self.alumnos.dtypes)
+        # Columnas que corresponden a categorías
+        categorias = selector(dtype_include="category")(self.alumnos)
         
-        # Estimar los valores vacíos usando el valor más frequente
-        #imp = SimpleImputer(strategy="most_frequent")
-        #sinnan = imp.fit_transform(self.alumnos)
-        #print("Quitados los NAN\n",sinnan)
-        #self.alumnos[columnas] = sinnan
+        # Obtenemos los subset de categorías ordenadas y no ordenadas
+        cOrdenadas = [] 
+        cNoOrdenadas = []
+        for columna in categorias:
+            if (self.alumnos[columna].dtype.ordered):
+                cOrdenadas.append(columna)
+            else:
+                cNoOrdenadas.append(columna)
+
+        # Preparamos el pipeline
+
+        # Las categorías ordenadas se transforman a categorías numéricas
+        transformar_cat_ordenadas = Pipeline(
+            steps=[
+                ("ordinalEncoder", preprocessing.OrdinalEncoder())
+            ]
+        )  
+        # Las categorías no ordenadas se transforman convirtiendo cada posible valor
+        # a una nueva columna que contendrá ceros y unos
+        # En caso de ser binarias, se elimina una de las dos columnas  
+        transformar_cat_no_ordenadas = Pipeline(
+            steps=[
+                ("oneHotEncoder", preprocessing.OneHotEncoder(drop='if_binary'))
+            ]
+        )
+        # Las categorías numéricas se transforman eliminando los valores que faltan
+        # y se sustituyen por el más frecuente de cada categoría
+        transformar_cat_numericas = Pipeline(
+            steps=[
+                ("numericas", SimpleImputer(strategy="most_frequent"))
+            ]
+        )
+        # Se compone el procesador de columnas con todas las transformaciones anteriores
+        procesadorColumnas = ColumnTransformer(
+            transformers=[
+                ("numericas",transformar_cat_numericas,cNumericas),
+                ("ordenadas", transformar_cat_ordenadas, cOrdenadas),
+                ("noOrdenadas", transformar_cat_no_ordenadas, cNoOrdenadas),
+            ]
+        )
+    
+        # Creamos un pipeline con el procesador configurado
+        self._Pipeline = Pipeline(
+            steps = [
+                ("procesarCategorias",procesadorColumnas)
+            ]
+        )
+    
+        # Aplicamos el pipeline
+        # Creamos un nuevo Pandas DataFrame con las nuevas columnas generadas tras el pipeline
+        self.alumnos = pd.DataFrame(self._Pipeline.fit_transform(self.alumnos),
+                                    columns = procesadorColumnas.get_feature_names_out()
+                                    )
         
-        categoriasOrdenadas = []
-        categoriasNoOrdenadas = []
+        # Marcamos los alumnos como procesados
+        self._datasetProcesado = True
 
-        for c in columnas:
-            if (self.alumnos[c].dtype=="category"):
-                print ("** categoría **")
-                # comprobamos si es un tipo de dato ordenado
-                if (self.alumnos[c].dtype.ordered):
-                    print("Categoría ordenada")
-                    categoriasOrdenadas.append(c)
-                else:
-                    print ("Categoría NO Ordenada")
-                    categoriasNoOrdenadas.append(c)
-        
-        print ("Categorias ordenadas detectadas:")
-        print (categoriasOrdenadas)
-
-        # Obtenemos un subset de categorías ordenadas
-        co = self.alumnos[categoriasOrdenadas]
-        print ("SUBSET DE CATEGORIAS ORDENADAS",co)
-
-        # Procesamos las categorías ordenadas
-        enc = preprocessing.OrdinalEncoder()
-        co = enc.fit_transform(co)
-        print("***",co)
-
-        self.alumnos[categoriasOrdenadas] = co
-        print("=== Alumnos transformados ===",self.alumnos)
-
-
-        print ("Categorias NO ordenadas detectadas:")
-        print (categoriasNoOrdenadas)
-
-        # Obtenemos un subset de categorías ordenadas
-        cno = self.alumnos[categoriasNoOrdenadas]
-        print ("SUBSET DE CATEGORIAS NO ORDENADAS",cno)
-        # Si son categorías binarias, elimina una de las dos opciones que crea para reducir los datos    
-        enc = preprocessing.OneHotEncoder(drop='if_binary',handle_unknown='infrequent_if_exist')    
-        cno = enc.fit_transform(cno).toarray()
-        print("===== CATEGORIAS NO ORDENADAS TRANSFORMADAS====\n")
-        print(cno)   
-
-        print ("\nCategorías utilizadas por el OneHotEncoder\n")
-        print(enc.get_feature_names_out()) 
-        #Añadimos a los alumnos las nuevas categorías generadas
-        self.alumnos[enc.get_feature_names_out()] = cno
-        #Eliminamos las categorías no ordenadas originales
-        self.alumnos=self.alumnos.drop(categoriasNoOrdenadas,axis=1)
-            
-
-            # Preparamos el pipeline para trabajar con el array de alumnos
-
-            # Estimar los valores vacíos usando el valor más frequente
-            # Convertir las categorías en datos numéricos
-            #steps = [("codificador", OrdinalEncoder()),("imputador", SimpleImputer(strategy="most_frequent"))]
-            #enc = Pipeline(steps)
-            #alumnosAordenar = enc.fit_transform(self.alumnos)
-            #print ("Alumnos procesados", alumnosAordenar)
-
-        
     def creaEquipos (self, alumnosxEquipo = 1, tipoAgrupamiento = TM_HETEROGENEO, codificarCategorias = True):
         """TMKMeans.creaEquipos: Crea equipos usando el algoritmo K-Means"""
         TeamMaker.creaEquipos(self, alumnosxEquipo)    
         
+        # Se procesa el dataset si no se ha hecho antes
+        if (not self._datasetProcesado):
+            print("\nProcesando dataset")
+            self._procesarDataset()
+       
         if (len(self.equiposFijos)==0):
-            #No hay equipos generados fijos
+            #No hay equipos generados fijos, se procesan todos los alumnos
+            print("\nNo hay equipos fijos\n")
             self._inicializaEquipos(alumnosxEquipo)
-
-            if codificarCategorias:
-                # Codificamos las categorías
-                alumnosAagrupar = self._codificarCategorias()
-            else:
-                # **** Hay que convertirlo a Numpy
-                alumnosAagrupar = self.alumnos
-
+            alumnosaAgrupar = list(range(self.numAlumnos))    
         else:
-            # Extraer solo los alumnos que no pertenecen a equipos fijados
-            pass
+            #Hay equipos fijos, solo se procesan el resto
+            alumnosaAgrupar = self._alumnosNoFijados()
+
+        print("\nAlumnos a mezclar: ", alumnosaAgrupar)
+        
+        # Filtramos por los alumnos a ordenar
+        npAlumnosaAgrupar = self.alumnos.iloc[alumnosaAgrupar].to_numpy()
+        # Obtenemos los equipos a generar
+        K = len(self._equiposNoFijados())
+        print("\n Alumnos a Agrupar: ",npAlumnosaAgrupar)
+        print("\nEquipos a generar ",K)
+
         # Realizar el algoritmo de clustering
+        KM = KMeans(n_clusters=K, init='k-means++', random_state=0, n_init="auto").fit(npAlumnosaAgrupar)
+
+        # Obtenemos variables tras el agrupamiento
+        # En esta lista tendremos el cluster al que pertenece cada alumno
+        clustersDeAlumnos = KM.labels_.tolist()
+        
+        # Creamos la lista de clusters
+        clusters = list(range(K))
+        for c in range(K):
+            clusters[c] = []
+        
+        for alumno in range(len(npAlumnosaAgrupar)):
+            cluster = clustersDeAlumnos[alumno]
+            clusters[cluster].append(alumno)
+            
+        print ("clusters asignados: ",clusters)
+
 
         if (tipoAgrupamiento == TM_HETEROGENEO):
-            # Equilibrar los equipos si el tipo de agrupamiento es TM_HETEROGENEO
+           # Agrupamiento HETEROGÉNEO
+           # Hay que ir repartiendo a los alumnos por
+           # diferentes equipos
+            
             print("agrupamiento Heterogeneo")
         else:
+            # Agrupamiento HOMOGÉNEO:
+            # Los clusters ya tienen elementos homogéneos
+            # Si sobran alumnos en un equipo, hay que
+            # asignarlos a otro
             print("Agrumapiento homogeneo")
         
