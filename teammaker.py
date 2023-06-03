@@ -6,6 +6,13 @@ TMKmeans -> Agrupamientos homogéneos o heterogéneos mediante el algoritmo K-me
 
 Atributos:
 alumnosxEquipo -> Indica el nº máximo de alumnos que puede haber en cada equipo (solo lectura)
+alumnos -> DataSet con las características de los alumnos. Debe ser un DataSet limpio, sin valores nulos. Las categorías se procesarán automáticamente
+equiposGenerados -> Lista que contiene los alumnos que pertenecen a cada equipo
+equiposFijos -> Lista de equipos que deben permanecer fijos tras sucesivos agrupamientos
+numEquipos -> Número de equipos generados
+numAlumnos -> Número de alumnos incluidos en la muestra
+funcLog -> Función de Log. Debe admitir dos patrámetros de tipo String: Proceso y Mensaje
+verbose -> Si es True, la clase llamará a funcLog para enviar mensajes durante la ejecución
 
 Tipos de agrupamiento:
 TM_HETEROGENEUS = Agrupamiento heterogéneo
@@ -36,23 +43,29 @@ class TeamMaker(ABC) :
     """
 
 #Métodos
-    def __init__(self, alumnos):
+    def __init__(self, alumnos, verbose = False, funclog = None):
         self.alumnos = alumnos
         self.equiposGenerados = []
         self.equiposFijos = []
         self.alumnosxEquipo = 0
         self.numEquipos = 0
         self.numAlumnos = 0
+        self.funcLog = funclog
+        self.verbose = verbose
+
+    def _log(self, proceso = "", mensaje = ""):
+        if (self.verbose) and (self.funcLog is not None):
+            self.funcLog(proceso,mensaje)
 
     
-    def _inicializaEquipos(self, alumnosxEquipo = 1):
+    def _inicializa_equipos(self, alumnosxEquipo = 1):
         """
         Inicializa la lista equiposGenerados añadiendo un elemento por cada equipo.
         Calcula el número de equipos que deben generarse
         """
         self.numAlumnos = len(self.alumnos)
         if (alumnosxEquipo > self.numAlumnos):
-            raise ValueError("inicializaEquipos: alumnnosxEquipo es mayor que el número de alumnos")
+            raise ValueError("_inicializa_equipos: alumnnosxEquipo es mayor que el número de alumnos")
         
         if (alumnosxEquipo > 0):
             self.alumnosxEquipo = alumnosxEquipo
@@ -64,7 +77,7 @@ class TeamMaker(ABC) :
             raise ValueError("inicializaEquipos: alumnosxEquipo debe ser un valor mayor que 0")
 
 
-    def _buscaEquipo(self, alumno = 0):
+    def _busca_equipo(self, alumno = 0):
         """Busca el alumno en los equipos generados y devuelve una lista con el equipo en el que se
         encuentra el alumno y la posición que ocupa dentro del equipo
         """
@@ -87,11 +100,11 @@ class TeamMaker(ABC) :
         return [equipo,posicion]
     
         
-    def creaEquipos (self, alumnosxEquipo = 1):
+    def crea_equipos (self, alumnosxEquipo = 1):
         pass
 
     
-    def fijaEquipos (self, equipos = [0]):
+    def fija_equipos (self, equipos = [0]):
         '''Indicar qué equipos se van a quedar fijos y no se van a modificar en siguientes llamadas a crearEquipos.
         Si en la lista se envían equipos que no existen, lanza una excepción.
         '''
@@ -101,7 +114,7 @@ class TeamMaker(ABC) :
                 raise ValueError("fijaEquipos: No existe el equipo a fijar")
         self.equiposFijos = equipos
 
-    def _equipoFijo(self, equipo = 0):
+    def _equipo_fijo(self, equipo = 0):
         """Devuelve True si el equipo pasado como parámetro es fijo"""
         try:
             self.equiposFijos.index(equipo)
@@ -111,29 +124,29 @@ class TeamMaker(ABC) :
             
         return encontrado
     
-    def _equiposNoFijados(self):
+    def _equipos_no_fijados(self):
         """Devuelve una lista con los equipos que no han sido fijados"""
         equiposNoFijados = []
         for i in range(self.numEquipos):
-                if not self._equipoFijo(i):
+                if not self._equipo_fijo(i):
                     # El equipo no está fijado
                     equiposNoFijados.append(i)
 
         return equiposNoFijados
     
-    def _alumnosNoFijados(self):
+    def _alumnos_no_fijados(self):
         """Devuelve una lista de alumnos que pertenecen a equipos que no están fijados"""
         poblacion = []
-        for i in self._equiposNoFijados():
+        for i in self._equipos_no_fijados():
             for j in range(len(self.equiposGenerados[i])):
                     poblacion.append(self.equiposGenerados[i][j])
         return poblacion
 
-    def intercambiaAlumnos (self, alumno1 = 0, alumno2 = 0):
+    def intercambia_alumnos (self, alumno1 = 0, alumno2 = 0):
         """Intercambia los dos alumnos entre sus equipos"""
         #Busca los equipos de los alumnos
-        equipoAlumno1 = self._buscaEquipo(alumno1)
-        equipoAlumno2 = self._buscaEquipo(alumno2)
+        equipoAlumno1 = self._busca_equipo(alumno1)
+        equipoAlumno2 = self._busca_equipo(alumno2)
 
         #Intercambia las posiciones
         self.equiposGenerados[equipoAlumno1[0]][equipoAlumno1[1]] = alumno2
@@ -141,7 +154,7 @@ class TeamMaker(ABC) :
   
 
     # Elimina la lista de equipos generados
-    def eliminaEquipos (self):
+    def elimina_equipos (self):
         self.equiposGenerados = []
         self.equiposFijos = []
         self.alumnosxEquipo = 0
@@ -153,16 +166,20 @@ class TMRandom (TeamMaker):
     Clase que implementa un agrupador aleatorio de alumnos.
     Es la forma más sencilla de agrupamiento y no tiene en cuenta las características recibidas de los alumnos.
     """
-    def __init__(self, alumnos):
-        TeamMaker.__init__(self, alumnos)
+    def __init__(self, alumnos, verbose = False, funcLog = None):
+        TeamMaker.__init__(self, alumnos, verbose, funcLog)
 
-    def creaEquipos (self, alumnosxEquipo = 1):
+    def crea_equipos (self, alumnosxEquipo = 1):
         """TMRandom.creaEquipos: Crea equipos de forma aleatoria"""
-        TeamMaker.creaEquipos(self, alumnosxEquipo)
+        TeamMaker.crea_equipos(self, alumnosxEquipo)
+
+        self._log("CREAR EQUIPOS","Inicializando el agrupamiento aleatorio")
+
         # Si no hay equipos fijos, los genera desde cero
         if (len(self.equiposFijos)==0):
             # inicializamos
-            self._inicializaEquipos(alumnosxEquipo)
+            self._log("CREAR EQUIPOS","No hay equipos fijados")
+            self._inicializa_equipos(alumnosxEquipo)
             # Creamos una lista aleatoria de alumnos
             alumnosAOrdenar = sample(list(range(self.numAlumnos)),self.numAlumnos)
 
@@ -176,10 +193,13 @@ class TMRandom (TeamMaker):
             alumnosAOrdenar = sample(poblacion,len(poblacion))
             # Los vamos añadiendo a los equipos que no están fijos
             equiposNoFijados = self._equiposNoFijados()
+            self._log("CREAR EQUIPOS","Hay equipos fijados. Creando los equipos" + str(equiposNoFijados))
             indice = 0
             for i in equiposNoFijados:
                 self.equiposGenerados[i] = alumnosAOrdenar[indice*self.alumnosxEquipo:self.alumnosxEquipo+self.alumnosxEquipo*indice]
                 indice +=1
+
+        self._log("CREAR EQUIPOS","Agrupamiento aleatorio finalizado")
                 
 
 class TMKmeans (TeamMaker):
@@ -202,11 +222,11 @@ class TMKmeans (TeamMaker):
         
     
     """
-    def __init__(self, alumnos):
-        TeamMaker.__init__(self, alumnos)
+    def __init__(self, alumnos, verbose = False, funcLog = None):
+        TeamMaker.__init__(self, alumnos, verbose, funcLog)
         self._datasetProcesado = False
 
-    def _procesarDataset(self):
+    def _procesar_dataset(self):
         # Obtenemos las columnas de cada tipo
         
         # Columnas numéricas
@@ -272,62 +292,118 @@ class TMKmeans (TeamMaker):
         # Marcamos los alumnos como procesados
         self._datasetProcesado = True
 
-    def creaEquipos (self, alumnosxEquipo = 1, tipoAgrupamiento = TM_HETEROGENEO, codificarCategorias = True):
+
+    def _equilibrar_clusters(self, clusters, maxElementos):
+        # ordenamos los clusters por tamaños
+        clustersOrdenados = sorted(clusters, key=lambda x:len(x), reverse=True)
+        
+        icMayor = 0
+        icMenor = len(clustersOrdenados)-1
+        clusterMayor = clustersOrdenados[icMayor]
+        clusterMenor = clustersOrdenados[icMenor]
+        if (len(clusterMayor) > maxElementos):
+           # Quitamos los elementos que sobran y los pasamos al
+            # cluster menor
+           
+            sobran = len(clusterMayor) - maxElementos
+            
+            aMover = clusterMayor[:sobran]
+            del clusterMayor[:sobran]
+            clustersOrdenados[icMayor] = clusterMayor
+            
+            clustersOrdenados[icMenor].extend(aMover)
+            
+            # Llamamos recursivamente
+            clustersOrdenados = self._equilibrar_clusters(clustersOrdenados,maxElementos)
+
+        # Devolvemos la lista de clusters ordenados
+        return clustersOrdenados
+            
+    def crea_equipos (self, alumnosxEquipo = 1, tipoAgrupamiento = TM_HETEROGENEO, funcLog = None):
         """TMKMeans.creaEquipos: Crea equipos usando el algoritmo K-Means"""
-        TeamMaker.creaEquipos(self, alumnosxEquipo)    
+        TeamMaker.crea_equipos(self, alumnosxEquipo)  
+
+        msgProceso = "CREAR EQUIPOS"
+        self._log(msgProceso,"Inicializando agrupamiento por K-means")  
         
         # Se procesa el dataset si no se ha hecho antes
         if (not self._datasetProcesado):
-            print("\nProcesando dataset")
-            self._procesarDataset()
+            self._log(msgProceso,"Procesando las características de los alumnos")
+            self._procesar_dataset()
+            self._log(msgProceso,"Características de alumnos procesadas")
        
         if (len(self.equiposFijos)==0):
             #No hay equipos generados fijos, se procesan todos los alumnos
-            print("\nNo hay equipos fijos\n")
-            self._inicializaEquipos(alumnosxEquipo)
+            self._log(msgProceso,"No hay equipos fijados")
+            self._inicializa_equipos(alumnosxEquipo)
             alumnosaAgrupar = list(range(self.numAlumnos))    
         else:
             #Hay equipos fijos, solo se procesan el resto
-            alumnosaAgrupar = self._alumnosNoFijados()
+            alumnosaAgrupar = self._alumnos_no_fijados()
+            self._log(msgProceso,"Hay equipos fijados")
 
-        print("\nAlumnos a mezclar: ", alumnosaAgrupar)
+        self._log(msgProceso,"Alumnos no fijados "+str(alumnosaAgrupar))
         
-        # Filtramos por los alumnos a ordenar
+        # Filtramos nuestro panda con los alumnos a ordenar
         npAlumnosaAgrupar = self.alumnos.iloc[alumnosaAgrupar].to_numpy()
         # Obtenemos los equipos a generar
-        K = len(self._equiposNoFijados())
-        print("\n Alumnos a Agrupar: ",npAlumnosaAgrupar)
-        print("\nEquipos a generar ",K)
+        equiposNoFijados = self._equipos_no_fijados()
+        self._log(msgProceso,"Generando equipos "+str(equiposNoFijados))
 
+        K = len(equiposNoFijados)
+
+        # Los vaciamos
+        for e in equiposNoFijados:
+            self.equiposGenerados[e] = []
+        
         # Realizar el algoritmo de clustering
+        self._log(msgProceso,"Inicio algoritmo KMeans")
         KM = KMeans(n_clusters=K, init='k-means++', random_state=0, n_init="auto").fit(npAlumnosaAgrupar)
+        self._log(msgProceso,"Fin algoritmo KMeans")
 
         # Obtenemos variables tras el agrupamiento
         # En esta lista tendremos el cluster al que pertenece cada alumno
         clustersDeAlumnos = KM.labels_.tolist()
-        
-        # Creamos la lista de clusters
+            
         clusters = list(range(K))
         for c in range(K):
             clusters[c] = []
         
-        for alumno in range(len(npAlumnosaAgrupar)):
-            cluster = clustersDeAlumnos[alumno]
+        for a in range(len(alumnosaAgrupar)):
+            alumno = alumnosaAgrupar[a]
+            cluster = clustersDeAlumnos[a]
             clusters[cluster].append(alumno)
-            
-        print ("clusters asignados: ",clusters)
-
 
         if (tipoAgrupamiento == TM_HETEROGENEO):
            # Agrupamiento HETEROGÉNEO
-           # Hay que ir repartiendo a los alumnos por
-           # diferentes equipos
+           # Recorremos los clusters y vamos asignando
+           # cada alumno a un grupo diferente
+            self._log(msgProceso,"Agrupamiento heterogéneo")
+            e = 0
+            for c in range(len(clusters)):
+                for a in clusters[c]:
+                    enf = equiposNoFijados[e]
+                    self.equiposGenerados[enf].append(a)
+                    e = (e+1) % K
+                    
+            print("\nEquipos generados",self.equiposGenerados)
+            self._log(msgProceso,"Equipos generados")
             
-            print("agrupamiento Heterogeneo")
         else:
             # Agrupamiento HOMOGÉNEO:
             # Los clusters ya tienen elementos homogéneos
             # Si sobran alumnos en un equipo, hay que
-            # asignarlos a otro
-            print("Agrumapiento homogeneo")
-        
+            # asignarlos a otro para equilibrar el número de alumnos máximo
+            
+            self._log(msgProceso,"Agrupamiento homogéneo")
+            
+            #Equilibramos clusters
+            self._log(msgProceso,"Equilibrando clusters")
+            clusters = self._equilibrar_clusters(clusters,self.alumnosxEquipo)        
+            self._log(msgProceso,"Clusters equilibrados")
+
+            #Asignamos los clusters a los equipos que no estaban fijados
+            for c in range(len(clusters)):
+                equipo = equiposNoFijados[c]
+                self.equiposGenerados[equipo] = clusters[c]
+            
