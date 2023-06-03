@@ -8,7 +8,7 @@ class Persona(models.Model):
     f_nac = models.DateField(("fecha de nacimiento"), auto_now=False, auto_now_add=False)
 
     def __str__(self):
-        return self.nombre+self.apellido1+self.apellido2
+        return self.nombre+" "+self.apellido1+" "+self.apellido2
     
 class Alumno(Persona):
     grupos = models.ManyToManyField("Grupo")
@@ -23,7 +23,7 @@ class CentroDeEstudios(models.Model):
     url = models.URLField("URL")
     observaciones = models.TextField
     alumnos = models.ManyToManyField(Alumno, through="MatriculaAlumno")
-    profesores = models.ManyToManyField(Profesor, through="ProfesorEmpleado")
+    profesores = models.ManyToManyField(Profesor, through="ProfesorEmpleado") 
 
     def __str__(self):
         return self.nombre
