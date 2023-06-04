@@ -1,0 +1,9 @@
+<div>{{ modelo.id }}
+</div>
+
+<h1>{{ modelo.nombre }}</h1>
+<ul>
+{% for caracteristica in caracteristicas.all %}
+    <li>{{ caracteristica.etiqueta }}</li>
+{% endfor %}
+</ul>
