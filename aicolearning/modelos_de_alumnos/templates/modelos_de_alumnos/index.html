@@ -2,9 +2,7 @@
     <ul>
     {% for modelo in modelo_list %}
         <li><a href="{% url 'modelos_de_alumnos:modelo' modelo.id %}">{{ modelo.nombre }}</a>
-        |
-        <a href="{% url 'modelos_de_alumnos:importar' modelo.id %}"> Importar datos a {{ modelo.nombre}}</a>
-        </li>
+        
     {% endfor %}
     </ul>
 {% else %}
