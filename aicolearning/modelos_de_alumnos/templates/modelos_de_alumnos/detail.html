@@ -1,0 +1,10 @@
+Viendo detalles del modelo
+<div>{{ DefinicionModelo.nombre }}
+</div>
+
+<h1>{{ modelo.nombre }}</h1>
+<ul>
+{% for caracteristica in caracteristicas.all %}
+    <li>{{ caracteristica.etiqueta }}</li>
+{% endfor %}
+</ul>
