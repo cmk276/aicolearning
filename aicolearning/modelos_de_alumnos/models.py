@@ -22,7 +22,7 @@ class Caracteristica(models.Model):
         (BOOLEANA, "Verdadero/Falso"),
         (ORDENADA, "Ordenada")
     ]
-    etiqueta = models.CharField("nombre", max_length=100)
+    etiqueta = models.CharField("etiqueta", max_length=100)
     descripcion = models.TextField
     definicion_modelo = models.ForeignKey(DefinicionModelo, on_delete=models.CASCADE)
     

@@ -5,7 +5,7 @@ class Persona(models.Model):
     apellido1 = models.CharField("primer apellido", max_length=50)
     apellido2 = models.CharField("segundo apellido", max_length=50)
     email = models.EmailField
-    f_nac = models.DateField(("fecha de nacimiento"), auto_now=False, auto_now_add=False)
+    f_nac = models.DateField(("fecha de nacimiento"), auto_now=False, auto_now_add=False,  null=True)
 
     def __str__(self):
         return self.nombre+" "+self.apellido1+" "+self.apellido2
