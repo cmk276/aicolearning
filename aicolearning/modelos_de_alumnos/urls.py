@@ -12,6 +12,7 @@ urlpatterns = [
     #path("<int:modelo_id>/", views.modelo, name="modelo"),
     path("<int:pk>/", views.DetailView.as_view(), name="modelo"),
 
-    # ex: /modelos_de_alumnos/1/importar
-    path("<int:modelo_id>/importar",views.importar, name="importar")
+    # ex: /modelos_de_alumnos/importar/
+    # Importar datos de alumnos desde un archivo CSV
+    path("importar/", views.importar, name="importar"),
 ]
