@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     "centro_de_estudios.apps.CentroDeEstudiosConfig",
     "modelos_de_alumnos.apps.ModelosDeAlumnosConfig",
+    "trabajo_colaborativo.apps.TrabajoColaborativoConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
