@@ -9,6 +9,8 @@ from .forms import FormImportarModelo
 from .models import DefinicionModelo, Caracteristica, DatoModelo
 import pandas as pd
 
+# FICHERO CON INFO CORRECTA
+
 # Importamos los modelos del centro de estudios
 from centro_de_estudios import models 
 
