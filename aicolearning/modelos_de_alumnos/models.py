@@ -45,8 +45,8 @@ class ValorSeleccion(models.Model):
         return self.etiqueta
     
 class DatoModelo(models.Model):
-    id_alumno = models.CharField("id alumno", max_length=10) 
+    id_alumno = models.CharField("id_alumno", max_length=10) 
     modelo = models.ForeignKey(DefinicionModelo, on_delete=models.CASCADE)
     datos = models.JSONField("datos")
     def __str__(self):
-        return self.modelo+" "+self.id_alumno
+        return str(self.modelo.id)+" "+self.id_alumno
