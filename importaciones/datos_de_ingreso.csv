@@ -1,0 +1,9 @@
+﻿id_alumno;nombre;apellido1;apellido2;Edad;Género;Plataforma Preferida;Nota media de acceso;Asiste a clase
+1;Alumno1;Tipo 1;Tipo 1;18;Masculino;MacOS;9;Nunca
+2;Alumno2;Tipo 1;Tipo 1;18;Masculino;MacOS;9;Nunca
+3;Alumno3;Tipo 2;Tipo 2;20;Femenino;Windows;7,9;Regularmente
+4;Alumno4;Tipo 2;Tipo 2;20;Femenino;Windows;7,9;Regularmente
+5;Alumno5;Tipo 3;Tipo 3;19;Otro;Linux;10;Siempre
+6;Alumno6;Tipo 3;Tipo 3;19;Otro;Linux;10;Siempre
+7;Alumno7;Tipo 4;Tipo 4;22;Femenino;MacOS;6;Nunca
+8;Alumno8;Tipo 4;Tipo 4;22;Femenino;MacOS;6;Nunca
