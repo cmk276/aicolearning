@@ -9,6 +9,8 @@ from aicolearning.modelos_de_alumnos.modelos_de_alumnos_utiles import crear_mode
 from .forms import FormImportarModelo
 from .models import DefinicionModelo
 
+# FICHERO CON INFO CORRECTA
+
 # Importamos los modelos del centro de estudios
 
 class IndexView(generic.ListView):
