@@ -35,6 +35,24 @@ def leer_csv(fichero):
     return df
 
 # guardar las filas del dataframe en la tabla DatoModelo
+#Crear un modelo de alumnos a partir de un dataframe
+
+def crear_modelo_alumnos(df, nombre_modelo):
+    modelo = DefinicionModelo(nombre=nombre_modelo)
+    modelo.save()
+
+    # extraemos las cuatro primeras columnas del dataframe
+    datos_alumnos = df.columns[0:4]
+
+    # Quitamos de df las cuatro primeras columnas que corresponden a los datos de identificación de los alumnos
+    df = df.drop(df.columns[0:4], axis=1)
+    # Recorremos el resto del dataset y creamos las características
+    for columna in df.columns:
+        caracteristica = Caracteristica(etiqueta=columna, definicion_modelo=modelo)
+        caracteristica.save()
+    return modelo.id
+
+
 def guardar_filas(df, id_modelo):
     # recorremos las filas del dataframe
     for index, row in df.iterrows():
