@@ -174,6 +174,8 @@ class VistaAgrupar(View):
         # Guardamos el agrupamiento en la base de datos
         print ("\nEQUIPOS CREADOS: \n", TM.equiposGenerados)
 
+        
+
         # Redirigimos a la vista de gestión de grupos
                                                                               
 
