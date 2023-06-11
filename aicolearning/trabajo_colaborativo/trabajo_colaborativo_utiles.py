@@ -46,7 +46,7 @@ def get_caracteristicas_modelo_alumnos(id_modelo_alumnos):
 def get_ids_caracteristicas_modelo_alumnos(id_modelo_alumnos):
         # extrae las lista de características del modelo de alumnos
         
-        caracteristicas=get_list_or_404(models.Caracteristica, definicion_modelo_id=id_modelo_alumnos)
+        caracteristicas=get_list_or_404(mda_models.Caracteristica, definicion_modelo_id=id_modelo_alumnos)
 
         lista_ids_caracteristicas = []
         # recorre las características	
@@ -61,7 +61,7 @@ def get_ids_caracteristicas_modelo_alumnos(id_modelo_alumnos):
 # Obtener los ids de las características a partir de una lista de etiquetas
 def get_ids_caracteristicas(id_modelo_alumnos, etiquetas_caracteristicas):
         # extrae las lista de características del modelo de alumnos
-        caracteristicas=get_list_or_404(models.Caracteristica, definicion_modelo_id=id_modelo_alumnos, etiqueta__in=etiquetas_caracteristicas)
+        caracteristicas=get_list_or_404(mda_models.Caracteristica, definicion_modelo_id=id_modelo_alumnos, etiqueta__in=etiquetas_caracteristicas)
         
         lista_ids_caracteristicas = []
         # recorre las características	
@@ -256,6 +256,7 @@ def agrupar(alumnos_por_equipo, tipo_agrupamiento, dfalumnos, verbose = False, f
         
         return TM  
 
+# Guarda los equipos en la base de datos y devuelve el id del agrupamiento generado
 def guardar_equipos(TM : teammaker.TeamMaker, id_modelo, ids_alumnos):
         try:
                 # Crea un objeto agrupamiento
@@ -302,6 +303,7 @@ def guardar_equipos(TM : teammaker.TeamMaker, id_modelo, ids_alumnos):
         
         # guardamos el agrupamiento de nuevo
         Agrupamiento.save()
+        return Agrupamiento.id
 
 def get_id_modelo_alumnos(id_agrupamiento):
         # Busca el agrupamiento
