@@ -33,4 +33,16 @@ urlpatterns = [
           views.VistaAgrupar.as_view(),
           {'ids_alumnos': ""},
           name="agrupar"),
+
+     # Vista para ver un equipo
+     # ex /trabajo_colaborativo/ver_equipo/1/1/1,2,3,4,5,6,7,8,9,10
+     path ("ver_equipo/<int:id_agrupamiento>/<int:id_equipo>/<int:mostrar_info>/<str:ids_caracteristicas>/", 
+           views.VistaEquipo.as_view(), name="ver_equipo"),
+     # La misma vista sin ids de características
+     path ("ver_equipo/<int:id_agrupamiento>/<int:id_equipo>/<int:mostrar_info>/", 
+           views.VistaEquipo.as_view(), 
+           {'ids_caracteristicas': ""},
+           name="ver_equipo"),
+     
+           
 ]

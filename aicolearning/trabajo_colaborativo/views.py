@@ -5,6 +5,7 @@ from django.views import generic
 from django.db import models
 from django.views import View
 from django.views.generic.edit import FormView
+import pandas as pd
 # importar trabajo_colaborativo_utiles
 from . import trabajo_colaborativo_utiles as tcu
 from . import teammaker as teammaker
@@ -176,10 +177,57 @@ class VistaAgrupar(View):
 
         tcu.guardar_equipos(TM, self.id_modelo_alumnos ,self.ids_alumnos)
                                                                               
+        # Generamos la URL para la vista confirmar_agrupamiento
+        
 
+class VistaEquipo(View):
 
+    def get(self, request, id_agrupamiento, id_equipo, mostrar_info, ids_caracteristicas):
+        
+        caracteristicas = []
+        ids_caracteristicas = ids_caracteristicas.split(",")
 
+        print ("------------------------- VistaEquipo -------------------------")
+        print ("\nid_caracteristicas: ", ids_caracteristicas)
+        
+        # buscamos el modelo al que pertenece el agrupamiento
+        id_modelo_alumnos = tcu.get_id_modelo_alumnos(id_agrupamiento)
 
+        # Si mostrar_info es 1, se cargan los literales de las características
+        if (mostrar_info == 1):
+
+            if (ids_caracteristicas==""):
+                print("\n ids_caracteristicas es None")
+                # Mostrar info y sin ids_características: se muestran todas las características
+                caracteristicas = tcu.get_caracteristicas_modelo_alumnos(id_modelo_alumnos)
+            else:
+                # Se muestran solo las etiquetas de las características pasadas como parámetro
+                caracteristicas = tcu.get_etiquetas_caracteristicas(id_modelo_alumnos, ids_caracteristicas)
+        else:
+            caracteristicas = []
+
+        print ("\n Características a mostrar: ", caracteristicas)
+
+        # Obtenemos los ids de los alumnos del equipo
+        ids_alumnos = tcu.get_ids_alumnos_equipo(id_agrupamiento, id_equipo)
+
+        print("\nids_alumnos del equipo: ", ids_alumnos)
+        
+        # Si se van a usar características, se genera el dataframe
+        if (len(caracteristicas) > 0):
+            # Obtenemos el dataframe del equipo insertando los nombres de los alumnos en la primera columna
+            df_equipo = tcu.generar_dataframe(id_modelo_alumnos, ids_alumnos, caracteristicas)
+        else:
+            df_equipo = pd.DataFrame()
+        
+        df_equipo = tcu.add_nombres_alumnos(df_equipo, ids_alumnos)
+
+        tabla_html = df_equipo.to_html(index=False)
+
+        print("\nDataFrame del equipo: \n", df_equipo)
+        
+        nombre_equipo = tcu.get_nombre_equipo(id_agrupamiento, id_equipo)
+        return render(request, 'trabajo_colaborativo/vista_equipo.html', {'tabla_html': tabla_html, 'nombre_equipo': nombre_equipo})
 
 
 

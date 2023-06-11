@@ -4,7 +4,7 @@ from django.db import models
 from modelos_de_alumnos import models as mda_models
 from centro_de_estudios import models as cde_models
 from trabajo_colaborativo import models as tc_models
-from django.shortcuts import get_list_or_404
+from django.shortcuts import get_list_or_404, get_object_or_404
 import time
 import threading
 import numpy as np 
@@ -25,8 +25,12 @@ TIPOS_AGRUPAMIENTO = [
 def get_caracteristicas_modelo_alumnos(id_modelo_alumnos):
         
         # extrae las lista de características del modelo de alumnos
+
+        print("Voy a extraer las caracrerísticas de id_modelo_alumnos: ", id_modelo_alumnos)
         
-        caracteristicas=get_list_or_404(models.Caracteristica, definicion_modelo_id=id_modelo_alumnos)
+        caracteristicas=get_list_or_404(mda_models.Caracteristica, definicion_modelo_id=id_modelo_alumnos)
+
+        print ("Características: ", caracteristicas)
 
         lista_caracteristicas = []
         # recorre las características	
@@ -105,6 +109,9 @@ def get_ids_alumnos_modelo(id_modelo_alumnos):
 # asignando el tipo de dato adecuado a cada columna
 def cambiar_tipos_columnas(df, id_modelo_alumnos, caracteristicas):
        # obtener las características del modelo de alumnos
+
+        print("\nVoy a cambiar los tipos de columnas de id_modelo_alumnos: ", id_modelo_alumnos)
+
         caracteristicas_modelo_alumnos = get_list_or_404(mda_models.Caracteristica, definicion_modelo_id=id_modelo_alumnos)
 
         # recorre las características del modelo de alumnos
@@ -154,7 +161,7 @@ def cambiar_tipos_columnas(df, id_modelo_alumnos, caracteristicas):
 # Características: lista de etiquetas de las características
 # Ids alumnos: lista de ids de los alumnos
 def generar_dataframe(id_modelo_alumnos, ids_alumnos, caracteristicas):
-        
+
         # Crea un Data vacío
         # Las cabeceras del DataFrame son las características
         df = pd.DataFrame(columns=caracteristicas)
@@ -195,6 +202,16 @@ def generar_dataframe(id_modelo_alumnos, ids_alumnos, caracteristicas):
         # Devuelve el DataFrame
         print ("\nTIPOS DE LAS COLUMNAS despues\n",df.dtypes)
 
+        return df
+
+def add_nombres_alumnos (df, ids_alumnos):
+        # Añade una columna con los nombres de los alumnos
+        nombres_alumnos = []
+        for id_alumno in ids_alumnos:
+                Alumno = get_object_or_404(cde_models.Alumno, id_alumno=id_alumno)
+                nombres_alumnos.append(Alumno.nombre+" "+Alumno.apellido1+" "+Alumno.apellido2)
+
+        df.insert(0, "Nombre", nombres_alumnos)
         return df 
 
 def get_tm_tipo_agrupamiento(tipo_agrupamiento):
@@ -283,8 +300,33 @@ def guardar_equipos(TM : teammaker.TeamMaker, id_modelo, ids_alumnos):
         except Exception as e:
                 raise ValueError("Error al guardar el agrupamiento: " + str(e))
         
-        # guardamos el equipo de nuevo
+        # guardamos el agrupamiento de nuevo
         Agrupamiento.save()
+
+def get_id_modelo_alumnos(id_agrupamiento):
+        # Busca el agrupamiento
+        Agrupamiento = tc_models.Agrupamiento.objects.get(id=id_agrupamiento)
+        # Busca el modelo de alumnos
+        ModeloAlumnos = Agrupamiento.modelo
+        # Devuelve el id del modelo de alumnos
+        return ModeloAlumnos.id
         
+# Devuelve una lista con los ids de los alumnos de un equipo       
+def get_ids_alumnos_equipo(id_agrupamiento, id_equipo):
+        # Busca el equipo
+        Equipo = tc_models.Equipo.objects.get(de_agrupamiento_id=id_agrupamiento, id=id_equipo)
+
+        Alumnos = Equipo.alumnos.all()
+        # Recorre los alumnos del equipo
+        ids_alumnos = []
+        for Alumno in Alumnos:
+                ids_alumnos.append(Alumno.id_alumno)
         
-                        
+        return ids_alumnos
+                       
+# Devuelve el nombre de un equipo
+def get_nombre_equipo(id_agrupamiento, id_equipo):
+        # Busca el equipo
+        Equipo = tc_models.Equipo.objects.get(de_agrupamiento_id=id_agrupamiento, id=id_equipo)
+        # Devuelve el nombre del equipo
+        return Equipo.nombre
