@@ -1,8 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy, reverse
 from .forms import FormConfigurarAgrupamiento 
 from django.views import generic
 from django.db import models
+from trabajo_colaborativo.models import Agrupamiento
 from django.views import View
 from django.views.generic.edit import FormView
 import pandas as pd
@@ -185,11 +186,7 @@ class VistaEquipo(View):
     def get(self, request, id_agrupamiento, id_equipo, mostrar_info, ids_caracteristicas):
         
         caracteristicas = []
-        ids_caracteristicas = ids_caracteristicas.split(",")
 
-        print ("------------------------- VistaEquipo -------------------------")
-        print ("\nid_caracteristicas: ", ids_caracteristicas)
-        
         # buscamos el modelo al que pertenece el agrupamiento
         id_modelo_alumnos = tcu.get_id_modelo_alumnos(id_agrupamiento)
 
@@ -197,21 +194,18 @@ class VistaEquipo(View):
         if (mostrar_info == 1):
 
             if (ids_caracteristicas==""):
-                print("\n ids_caracteristicas es None")
+                
                 # Mostrar info y sin ids_características: se muestran todas las características
                 caracteristicas = tcu.get_caracteristicas_modelo_alumnos(id_modelo_alumnos)
             else:
                 # Se muestran solo las etiquetas de las características pasadas como parámetro
+                ids_caracteristicas = ids_caracteristicas.split(",")
                 caracteristicas = tcu.get_etiquetas_caracteristicas(id_modelo_alumnos, ids_caracteristicas)
         else:
             caracteristicas = []
 
-        print ("\n Características a mostrar: ", caracteristicas)
-
         # Obtenemos los ids de los alumnos del equipo
         ids_alumnos = tcu.get_ids_alumnos_equipo(id_agrupamiento, id_equipo)
-
-        print("\nids_alumnos del equipo: ", ids_alumnos)
         
         # Si se van a usar características, se genera el dataframe
         if (len(caracteristicas) > 0):
@@ -223,67 +217,41 @@ class VistaEquipo(View):
         df_equipo = tcu.add_nombres_alumnos(df_equipo, ids_alumnos)
 
         tabla_html = df_equipo.to_html(index=False)
-
-        print("\nDataFrame del equipo: \n", df_equipo)
         
         nombre_equipo = tcu.get_nombre_equipo(id_agrupamiento, id_equipo)
         return render(request, 'trabajo_colaborativo/vista_equipo.html', {'tabla_html': tabla_html, 'nombre_equipo': nombre_equipo})
 
+# Esta vista sí accede directamente a los modelos de la base de datos
+class VistaEquipos (View):
+    def get(self, request, id_agrupamiento, mostrar_info, ids_caracteristicas):
 
+        print("------------------ VistaEquipos ------------------")
+        site_url = "http://" + request.META['HTTP_HOST']
 
-"""
-class FormViewConfigurarAgrupamiento(FormView):
-    template_name = "trabajo_colaborativo/configurar_agrupamiento.html"
-    form_class = FormConfigurarAgrupamiento
-    success_url = 'confirmar_agrupamiento'
-    caracteristicas = []
+        # Buscamos el nombre del agrupamiento
+        agrupamiento = get_object_or_404(Agrupamiento,id=id_agrupamiento)
+        print ("\nNombre agrupamiento: ", agrupamiento.etiqueta)
+        print ("\n ids_caracteristicas: ", ids_caracteristicas)
 
-    def get_context_data(self, **kwargs):
-        context = super(FormViewConfigurarAgrupamiento, self).get_context_data(**kwargs)
+        # Vamos a enviar una lista de diccionarios con los datos de los equipos
+        datos = []
 
-        context['id_modelo_alumnos'] = self.kwargs['id_modelo_alumnos']
-        context['num_alumnos'] = self.kwargs['num_alumnos']
-        # La lista de características se ha creado en el método get()
-        context['caracteristicas'] = [(caracteristica, caracteristica) for caracteristica in self.caracteristicas]
+        # por cada equipo del agrupamiento, generamos el enlace a la vista de equipo
+        for equipo in agrupamiento.equipo_set.all():
+            print ("\nEquipo: ", equipo.nombre)
+            # Obtenemos el número de alumnos de ese equipo
+            num_alumnos = equipo.alumnos.count()
 
-        print ("\nV ***GET_CONTEXT_DATA ---- CARACTERÍSTICAS: ", context['caracteristicas'])
-        return context
-    
-    def get_form(self, form_class=None):
+            print("\n num_alumnos: ", num_alumnos)
 
-        form = super().get_form(form_class)
-        
-        # Modificar el contenido del campo características
-        form.fields["caracteristicas"].choices = [(caracteristica, caracteristica) for caracteristica in self.caracteristicas]
+            if ids_caracteristicas == "":
+                url = reverse('trabajo_colaborativo:ver_equipo', args=[id_agrupamiento, equipo.id, mostrar_info])
+            else:
+                url = reverse('trabajo_colaborativo:ver_equipo', args=[id_agrupamiento, equipo.id, mostrar_info, ids_caracteristicas])
 
-        return form
+            print ("\nURL: ", url)
+            datos.append({'nombre_equipo': equipo.nombre, 'num_alumnos': num_alumnos, 'url': site_url+url})
 
-    # get
-    def get(self, request, *args, **kwargs):
-
-        print("\n V Método get()")
-
-        print(kwargs["id_modelo_alumnos"])
-        # extrae las lista de características del modelo de alumnos
-        id_modelo_alumnos = kwargs["id_modelo_alumnos"]
-        self.caracteristicas = tcu.get_caracteristicas_modelo_alumnos(id_modelo_alumnos)
-        
-        inicial = super(FormViewConfigurarAgrupamiento, self).get(request, *args, **kwargs)
-
-        
-        print("\nV Método get()  ---- CARACTERÍSTICAS: ", self.caracteristicas)
-
-
-        return inicial 
-    
-    # post
-    def post(self, request, *args, **kwargs):
-        print ("\nV Método post()")
-        id_modelo_alumnos = kwargs["id_modelo_alumnos"]
-        self.caracteristicas = tcu.get_caracteristicas_modelo_alumnos(id_modelo_alumnos)
-
-        print("\nV Método post()  ---- CARACTERÍSTICAS: ")
-        print(kwargs)
-
-        return super(FormViewConfigurarAgrupamiento, self).post(request, *args, **kwargs)
-"""
+        # renderizamos la vista del listado de equipos
+        print (datos)
+        return render(request, 'trabajo_colaborativo/ver_equipos.html', {'equipos': datos, 'titulo': agrupamiento.etiqueta})

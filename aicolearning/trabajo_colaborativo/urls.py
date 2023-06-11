@@ -35,7 +35,7 @@ urlpatterns = [
           name="agrupar"),
 
      # Vista para ver un equipo
-     # ex /trabajo_colaborativo/ver_equipo/1/1/1,2,3,4,5,6,7,8,9,10
+     # ex /trabajo_colaborativo/ver_equipo/1/1/1,2,3
      path ("ver_equipo/<int:id_agrupamiento>/<int:id_equipo>/<int:mostrar_info>/<str:ids_caracteristicas>/", 
            views.VistaEquipo.as_view(), name="ver_equipo"),
      # La misma vista sin ids de características
@@ -44,5 +44,13 @@ urlpatterns = [
            {'ids_caracteristicas': ""},
            name="ver_equipo"),
      
-           
+     # Vista para ver un listado de equipos de un agrupamiento
+     path ("ver_equipos/<int:id_agrupamiento>/<int:mostrar_info>/<str:ids_caracteristicas>/",
+           views.VistaEquipos.as_view(), name="ver_equipos"),
+     # La misma vista sin ids de características
+     path ("ver_equipos/<int:id_agrupamiento>/<int:mostrar_info>/",
+           views.VistaEquipos.as_view(), 
+           {'ids_caracteristicas': ""},
+           name="ver_equipos"),
+        
 ]
