@@ -1,7 +1,8 @@
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_list_or_404, get_object_or_404, render
 from django.urls import reverse_lazy, reverse
 from .forms import FormConfigurarAgrupamiento 
-from django.views import generic
+from django.views import generic 
+from django.views.generic import ListView
 from django.db import models
 from trabajo_colaborativo.models import Agrupamiento
 from django.views import View
@@ -258,3 +259,39 @@ class VistaEquipos (View):
         # renderizamos la vista del listado de equipos
         print (datos)
         return render(request, 'trabajo_colaborativo/ver_equipos.html', {'equipos': datos, 'titulo': agrupamiento.etiqueta})
+
+# Clase para gestionar el listado de agrupamientos
+class VistaAgrupamientos(ListView):
+    model = Agrupamiento
+    template_name = 'trabajo_colaborativo/agrupamientos.html'
+    context_object_name = 'agrupamientos'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Titulo de la página	
+        context['titulo'] = "Agrupamientos"
+
+        # Recorremos los agrupamientos para añadir datos adicionales
+        for agrupamiento in context['agrupamientos']:
+            # Obtenemos el modelo de alumnos al que pertenece el agrupamiento y lo añadimos al contexto
+            modelo_alumnos = agrupamiento.modelo
+
+            # Obtenemos los datos del modelo de alumnos
+            num_alumnos = models.DatoModelo.objects.filter(modelo=modelo_alumnos).count()
+            
+            # Calculamos los equipos que se han generado en el agrupamiento
+            num_equipos = agrupamiento.equipos.count()
+
+            # Generamos la URL para ver el listado de los equipos generados en el agrupamiento
+            site_url = "http://" + self.request.META['HTTP_HOST']
+            url_agrupamiento = site_url+reverse('trabajo_colaborativo:ver_equipos', args=[agrupamiento.id, 1])
+
+
+            # Añadimos los datos al contexto
+            agrupamiento.num_alumnos = num_alumnos
+            agrupamiento.num_equipos = num_equipos
+            agrupamiento.url_agrupamiento = url_agrupamiento
+
+        
+        print ("\nContexto: ", context)
+        return context

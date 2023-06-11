@@ -6,6 +6,9 @@ app_name = "trabajo_colaborativo"
 urlpatterns = [
     path("", views.index, name="index"),
 
+     # path para la configuración de agrupamiento pasando un número de alumnos por grupo
+    path("agrupamientos/", views.VistaAgrupamientos.as_view(), name="agrupamientos"),
+
     # path para la configuración de agrupamiento pasando un número de alumnos por grupo
     # ex /trabajo_colaborativo/configurar_agrupamiento/26/10/2/1,2,3,4,5,6,7,8,9,10
     path("configurar_agrupamiento/<int:id_modelo_alumnos>/<int:num_alumnos>/<int:num_alumnos_por_grupo>/<str:ids_alumnos>", 

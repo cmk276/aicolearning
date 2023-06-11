@@ -312,6 +312,14 @@ def get_id_modelo_alumnos(id_agrupamiento):
         ModeloAlumnos = Agrupamiento.modelo
         # Devuelve el id del modelo de alumnos
         return ModeloAlumnos.id
+
+def get_id_modelo_alumnos(id_agrupamiento):
+        # Busca el agrupamiento
+        Agrupamiento = tc_models.Agrupamiento.objects.get(id=id_agrupamiento)
+        # Busca el modelo de alumnos
+        ModeloAlumnos = Agrupamiento.modelo
+        # Devuelve el id del modelo de alumnos
+        return ModeloAlumnos.id
         
 # Devuelve una lista con los ids de los alumnos de un equipo       
 def get_ids_alumnos_equipo(id_agrupamiento, id_equipo):
