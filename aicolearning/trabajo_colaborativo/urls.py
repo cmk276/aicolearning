@@ -1,5 +1,4 @@
 from django.urls import path
-from .trabajo_colaborativo_utiles import TIPOS_AGRUPAMIENTO
 
 from . import views
 

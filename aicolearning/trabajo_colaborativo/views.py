@@ -7,6 +7,7 @@ from django.views import View
 from django.views.generic.edit import FormView
 # importar trabajo_colaborativo_utiles
 from . import trabajo_colaborativo_utiles as tcu
+from . import teammaker as teammaker
 
 
 # Importamos los modelos del modelo de alumnos
@@ -112,6 +113,7 @@ class VistaAgrupar(View):
 
     # Datos que va a necesitar el agrupador
     ids_caracteristicas = []
+    caracteristicas = []
     ids_alumnos = []
 
     # Inicialización de la vista
@@ -123,7 +125,7 @@ class VistaAgrupar(View):
         print("\nVistaAgrupar ***setup ---- kwargs: ", kwargs)
 
         # Obtenemos los datos necesarios
-        id_modelo_alumnos = kwargs["id_modelo_alumnos"]
+        self.id_modelo_alumnos = kwargs["id_modelo_alumnos"]
 
         # Alumnos por grupo
         self.num_alumnos_por_grupo = kwargs["alumnos_por_grupo"]
@@ -135,7 +137,7 @@ class VistaAgrupar(View):
         cadena_ids_alumnos = kwargs["ids_alumnos"]
         if (cadena_ids_alumnos == ""):
             # No se pasan alumnos como parámetro, se obtienen todos los alumnos asociados al modelo
-            self.ids_alumnos = tcu.get_ids_alumnos_modelo(id_modelo_alumnos)
+            self.ids_alumnos = tcu.get_ids_alumnos_modelo(self.id_modelo_alumnos)
         else:
             # Se pasan alumnos como parámetro
             # cadena_ids_alumnos es una lista separada por comas de los ids de los alumnos
@@ -146,21 +148,33 @@ class VistaAgrupar(View):
         cadena_ids_caracteristicas = kwargs["ids_caracteristicas"]
         if (cadena_ids_caracteristicas == ""):
             # No se pasan características como parámetro, se obtienen todas las características asociadas al modelo
-            self.ids_caracteristicas = tcu.get_ids_caracteristicas_modelo_alumnos(id_modelo_alumnos)
+            self.ids_caracteristicas = tcu.get_ids_caracteristicas_modelo_alumnos(self.id_modelo_alumnos)
         else:
             # Se pasan características como parámetro
             # cadena_ids_caracteristicas es una lista separada por comas de los ids de las características
             # convertirlo a lista
             self.ids_caracteristicas = cadena_ids_caracteristicas.split(",")
         
+        # Obtenemos las etiquetas de las características
+        self.caracteristicas = tcu.get_etiquetas_caracteristicas(self.id_modelo_alumnos, self.ids_caracteristicas)
+
         print ("\nVistaAgrupar ***setup ---- ids_alumnos: ", self.ids_alumnos)
-        print ("\nVistaAgrupar ***setup ---- caracteristicas: ", self.ids_caracteristicas)
+        print ("\nVistaAgrupar ***setup ---- ids_caracteristicas: ", self.ids_caracteristicas)
         
-    def get(self, requesr, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
 
+        # Se prepara un dataframe con los datos de los alumnos y las características
+        print("\n PREPARANDO Dataframe")
+        df = tcu.generar_dataframe(self.id_modelo_alumnos,self.ids_alumnos, self.caracteristicas)
+        print("\n DataFrame: \n", df)
+        
         # REALIZAR AGRUPAMIENTO    
+        TM = tcu.agrupar(self.num_alumnos_por_grupo, self.tipo_agrupamiento, df, True, tcu.log)
+        
+        # Guardamos el agrupamiento en la base de datos
+        print ("\nEQUIPOS CREADOS: \n", TM.equiposGenerados)
 
-        return render(request, 'trabajo_colaborativo/temp_agrupando.html')
+        # Redirigimos a la vista de gestión de grupos
                                                                               
 
 

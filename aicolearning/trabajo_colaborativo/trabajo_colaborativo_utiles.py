@@ -4,6 +4,12 @@ from modelos_de_alumnos import models
 from django.shortcuts import get_list_or_404
 import time
 import threading
+import numpy as np 
+import pandas as pd
+from pandas.api.types import CategoricalDtype
+import json
+import trabajo_colaborativo.teammaker as teammaker
+
 
 # Tipos de agrupamiento aleatorio, homogéneo y heterogéneo
 TIPOS_AGRUPAMIENTO = [
@@ -59,6 +65,20 @@ def get_ids_caracteristicas(id_modelo_alumnos, etiquetas_caracteristicas):
         # Devuelve la lista de características
         return lista_ids_caracteristicas      
 
+# Obtener las etiquetas de las características a partir de una lista de ids de características
+def get_etiquetas_caracteristicas(id_modelo_alumnos, ids_caracteristicas):
+        # extrae las lista de características del modelo de alumnos
+        caracteristicas=get_list_or_404(models.Caracteristica, definicion_modelo_id=id_modelo_alumnos, id__in=ids_caracteristicas)
+        
+        lista_etiquetas_caracteristicas = []
+        # recorre las características	
+        for caracteristica in caracteristicas:
+                # Añade las características a la lista
+                lista_etiquetas_caracteristicas.append(caracteristica.etiqueta)
+        
+        # Devuelve la lista de características
+        return lista_etiquetas_caracteristicas
+
 # Obtener los ids de los alumnos de un modelo de alumnos
 def get_ids_alumnos_modelo(id_modelo_alumnos):
                 
@@ -78,12 +98,141 @@ def get_ids_alumnos_modelo(id_modelo_alumnos):
         # Devuelve la lista de ids de los alumnos
         return lista_ids_alumnos
 
-# Clase que lanza el agrupamiento en un thread en segundo plano
-class ThreadAgrupar(threading.Thread):
-    def __init__(self):
-        super().__init__()
+# Lee las características de un modelo de alumnos y devuelve el DataFrame
+# asignando el tipo de dato adecuado a cada columna
+def cambiar_tipos_columnas(df, id_modelo_alumnos, caracteristicas):
+       # obtener las características del modelo de alumnos
+        caracteristicas_modelo_alumnos = get_list_or_404(models.Caracteristica, definicion_modelo_id=id_modelo_alumnos)
 
-    def run(self):
-        # Simular un proceso largo
-        time.sleep(15)
-        # Realiza aquí la lógica del proceso largo
+        # recorre las características del modelo de alumnos
+        for caracteristica in caracteristicas_modelo_alumnos:
+                # Si la característica está en la lista de características
+                if caracteristica.etiqueta in caracteristicas:
+                        if caracteristica.tipo == models.CNUMERICA:
+                                # Cambia el tipo de dato de la columna a numérico
+                                print ("\ncambiando tipo de dato de la columna " + caracteristica.etiqueta + " a numérico")
+                                df[caracteristica.etiqueta] = pd.to_numeric(df[caracteristica.etiqueta])
+                        
+                        elif caracteristica.tipo == models.CNO_ORDENADA:
+                                # Cambia el tipo de dato de la columna a categoría no ordenada
+                                print ("\ncambiando tipo de dato de la columna " + caracteristica.etiqueta + " a categoría no ordenada")
+                                df[caracteristica.etiqueta] = pd.Categorical(df[caracteristica.etiqueta], ordered=False)
+                        
+                        elif caracteristica.tipo == models.CBOOLEANA:
+                                # Cambia el tipo de dato de la columna a booleano
+                                print ("\ncambiando tipo de dato de la columna " + caracteristica.etiqueta + " a booleano")
+                                df[caracteristica.etiqueta] = df[caracteristica.etiqueta].astype('bool')
+
+                        # Si la característica es de tipo texto
+                        elif caracteristica.tipo == models.CTEXTO:
+                                # Cambia el tipo de dato de la columna a texto
+                                print ("\ncambiando tipo de dato de la columna " + caracteristica.etiqueta + " a texto")
+                                df[caracteristica.etiqueta] = df[caracteristica.etiqueta].astype('str')
+                        
+                        elif caracteristica.tipo == models.CORDENADA:
+                                # lee los valores de la característica de valorseleccion
+                                print("\ncammbiando tipo de dato de la columna " + caracteristica.etiqueta + " a categoría ordenada")
+                                valores_seleccion = get_list_or_404(models.ValorSeleccion, caracteristica_id=caracteristica.id) 
+                                valores = []
+                                # recorre los valores de la característica de valorseleccion
+                                for valor_seleccion in valores_seleccion:
+                                        # añade los valores a la lista
+                                        valores.append(valor_seleccion.etiqueta)
+                               
+                                print ("\n____valores____:", valores)
+
+                                # cambia el tipo de dato de la columna a categoría ordenada
+                                df[caracteristica.etiqueta] = pd.Categorical(df[caracteristica.etiqueta], ordered=True, categories=valores)
+                        
+
+        return df        
+
+# Generar un DataFrame leyendo los datos del modelo
+# Características: lista de etiquetas de las características
+# Ids alumnos: lista de ids de los alumnos
+def generar_dataframe(id_modelo_alumnos, ids_alumnos, caracteristicas):
+        
+        # Crea un Data vacío
+        # Las cabeceras del DataFrame son las características
+        df = pd.DataFrame(columns=caracteristicas)
+        
+        print ("\nTIPOS DE LAS COLUMNAS antes\n",df.dtypes)
+        
+        # Recorre los ids de los alumnos
+        for id_alumno in ids_alumnos:
+                # Extrae los datos del alumno
+                datos_alumno = get_list_or_404(models.DatoModelo, modelo_id=id_modelo_alumnos, id_alumno=id_alumno)
+                
+                # Crea una lista con los datos del alumno
+                lista_datos_alumno = []
+                # Recorre los datos del alumno
+                for dato_alumno in datos_alumno:
+                        
+                        # El dato del alumno está guardado como un json
+                        # Convierte el json en una lista de tuplas
+                        valores_alumno = json.loads(dato_alumno.datos)
+
+                        # Por cada característica, la buscamos en valores_alumno y añadimos su valor a la lista
+                        # si no está, se añade np.nan
+                        for caracteristica in caracteristicas:
+                                # Busca la característica en los valores del alumno
+                                # Si está, añade su valor a la lista
+                                # Si no está, añade np.nan
+                                if caracteristica in valores_alumno:
+                                        lista_datos_alumno.append(valores_alumno[caracteristica])
+                                else:
+                                        lista_datos_alumno.append(np.nan)
+
+                # Añade los datos del alumno al DataFrame
+                df.loc[len(df)] = lista_datos_alumno
+        
+        # Cambia el tipo de las columnas según se haya definido la categoría en el modelo
+        df = cambiar_tipos_columnas(df, id_modelo_alumnos, caracteristicas)
+
+        # Devuelve el DataFrame
+        print ("\nTIPOS DE LAS COLUMNAS despues\n",df.dtypes)
+
+        return df 
+
+def get_tm_tipo_agrupamiento(tipo_agrupamiento):
+
+        # comparamos tipo_agrupamiento con TIPOS_AGRUPAMIENTO
+        if tipo_agrupamiento == TIPOS_AGRUPAMIENTO[0][0]:
+                return teammaker.TM_ALEATORIO
+        elif tipo_agrupamiento == TIPOS_AGRUPAMIENTO[1][0]:
+                return teammaker.TM_HOMOGENEO
+        elif tipo_agrupamiento == TIPOS_AGRUPAMIENTO[2][0]:
+                return teammaker.TM_HETEROGENEO
+        else:
+                raise TypeError("Tipo de agrupamiento no válido")
+
+# Devuelve el tipo TeamMaker adecuado según el tipo de agrupamiento
+def get_team_maker(tipo_agrupamiento, dfalumnos, verbose = False, funclog = None):
+        # Dependiendo del tipo de agrupamiento, crea el obteto TeamMaker adecuado
+        ta = get_tm_tipo_agrupamiento(tipo_agrupamiento)
+
+        if ta == teammaker.TM_ALEATORIO:
+                print("\n agrupando aleatoriamente")
+                TM = teammaker.TMRandom(dfalumnos, verbose, funclog)
+        elif ta in (teammaker.TM_HOMOGENEO,teammaker.TM_HETEROGENEO):
+               print("\n agrupamiento kmeans")
+               TM = teammaker.TMKmeans(dfalumnos, verbose, funclog)
+        else:
+                raise ValueError("Tipo de agrupamiento no válido")
+
+        return TM 
+
+# función de log auxiliar, solo para debug
+def log(proceso = "", mensaje = ""):
+    print("\n** LOG [",proceso,"] ",mensaje)            
+
+# Realizar un agrupamiento y devuelve un objeto TeamMaker
+def agrupar(alumnos_por_equipo, tipo_agrupamiento, dfalumnos, verbose = False, funclog = None):
+        # Obtenemos el objeto TM adecuado al tipo de agrupamiento
+        TM = get_team_maker(tipo_agrupamiento, dfalumnos, verbose, funclog)
+
+        # Crea los equipos
+        TM.crea_equipos(alumnos_por_equipo,  get_tm_tipo_agrupamiento(tipo_agrupamiento))
+        
+        return TM  
+
