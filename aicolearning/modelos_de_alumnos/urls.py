@@ -8,9 +8,9 @@ urlpatterns = [
     #path("", views.index, name="index"),
     path("", views.IndexView.as_view(), name="index"),
     
-    # ex: /modelos_de_alumnos/1/
-    #path("<int:modelo_id>/", views.modelo, name="modelo"),
-    path("<int:pk>/", views.DetailView.as_view(), name="modelo"),
+    # Muestra los datos de un modelo de alumnos
+    # ex: /modelos_de_alumnos/5/
+    path("<int:id_modelo>/", views.VistaModelo.as_view(), name="vista_modelo"),
 
     # ex: /modelos_de_alumnos/importar/
     # Importar datos de alumnos desde un archivo CSV

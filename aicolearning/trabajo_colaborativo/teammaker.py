@@ -6,25 +6,21 @@ TMKmeans -> Agrupamientos homogéneos o heterogéneos mediante el algoritmo K-me
 
 Atributos:
 alumnosxEquipo -> Indica el nº máximo de alumnos que puede haber en cada equipo (solo lectura)
-alumnos -> DataSet con las características de los alumnos. Debe ser un DataSet limpio, sin valores nulos. Las categorías se procesarán automáticamente
+alumnos -> DataSet con las características de los alumnos. Las categorías se procesarán automáticamente
 equiposGenerados -> Lista que contiene los alumnos que pertenecen a cada equipo
-equiposFijos -> Lista de equipos que deben permanecer fijos tras sucesivos agrupamientos
+equiposFijos -> Lista de equipos que deben permanecer en sucesivos agrupamientos
 numEquipos -> Número de equipos generados
 numAlumnos -> Número de alumnos incluidos en la muestra
 funcLog -> Función de Log. Debe admitir dos patrámetros de tipo String: Proceso y Mensaje
 verbose -> Si es True, la clase llamará a funcLog para enviar mensajes durante la ejecución
-
-Tipos de agrupamiento:
-TM_HETEROGENEUS = Agrupamiento heterogéneo
-TM_HOMOGENEUS = Agrupamiento homogéneo
 """
+
 from abc import ABC, abstractmethod
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.compose import make_column_selector as selector
 from sklearn.cluster import KMeans
 from sklearn.impute import SimpleImputer
-#from sklearn.preprocessing import OrdinalEncoder
 from sklearn import preprocessing
 from sklearn.pipeline import Pipeline
 from random import *
@@ -40,9 +36,18 @@ class TeamMaker(ABC) :
     """Clase TeamMaker
     Clase abstracta que define la funcionalidad básica de un agrupador de alumnos.
     La clase se inicializa con un array de vectores con información sobre los alumnos a agrupar.
-    Permite generar grupos, dejar unos grupos fijos (para poder reagrupar otros), 
-    intercambiar alumnos entre grupos... etc.
+    Permite generar grupos, dejar unos grupos fijos (para poder reagrupar otros), intercambiar alumnos entre grupos... etc.
+    Atributos:
+        alumnosxEquipo -> Indica el nº máximo de alumnos que puede haber en cada equipo
+        alumnos -> DataSet con las características de los alumnos. Las categorías se procesarán automáticamente
+        equiposGenerados -> Lista que contiene los alumnos que pertenecen a cada equipo
+        equiposFijos -> Lista de equipos que deben permanecer en sucesivos agrupamientos
+        numEquipos -> Número de equipos generados
+        numAlumnos -> Número de alumnos incluidos en la muestra
+        funcLog -> Función de Log. Debe admitir dos patrámetros de tipo String: Proceso y Mensaje
+        verbose -> Si es True, la clase llamará a funcLog para enviar mensajes durante la ejecución
     """
+    @abstractmethod
 
 #Métodos
     def __init__(self, alumnos, verbose = False, funclog = None):
@@ -54,6 +59,10 @@ class TeamMaker(ABC) :
         self.numAlumnos = 0
         self.funcLog = funclog
         self.verbose = verbose
+
+    def crea_equipos (self, alumnosxEquipo = 1, tipoAgrupamiento = TM_NO_DEFINIDO):
+        pass
+
 
     def _log(self, proceso = "", mensaje = ""):
         if (self.verbose) and (self.funcLog is not None):
@@ -100,11 +109,6 @@ class TeamMaker(ABC) :
             raise ValueError("_buscaEquipo: alumno no encontrado")
         
         return [equipo,posicion]
-    
-        
-    def crea_equipos (self, alumnosxEquipo = 1, tipoAgrupamiento = TM_NO_DEFINIDO):
-        pass
-
     
     def fija_equipos (self, equipos = [0]):
         '''Indicar qué equipos se van a quedar fijos y no se van a modificar en siguientes llamadas a crearEquipos.
@@ -166,7 +170,7 @@ class TeamMaker(ABC) :
 class TMRandom (TeamMaker):
     """Clase TMRandom
     Clase que implementa un agrupador aleatorio de alumnos.
-    Es la forma más sencilla de agrupamiento y no tiene en cuenta las características recibidas de los alumnos.
+    Es la forma más sencilla de agrupamiento y no tiene en cuenta las características recibidas de los mismos.
     """
     def __init__(self, alumnos, verbose = False, funcLog = None):
         TeamMaker.__init__(self, alumnos, verbose, funcLog)
@@ -185,7 +189,7 @@ class TMRandom (TeamMaker):
             # Creamos una lista aleatoria de alumnos
             alumnosAOrdenar = sample(list(range(self.numAlumnos)),self.numAlumnos)
 
-            # Vamos añadiendo a cada equipo el número de alumnos que hay en cada uno
+            # Vamos añadiendo a cada equipo el número de alumnos que debe haber en cada uno
             for i in range(self.numEquipos):
                 self.equiposGenerados[i] = alumnosAOrdenar[i*self.alumnosxEquipo:self.alumnosxEquipo+self.alumnosxEquipo*i]
         else:
@@ -200,7 +204,6 @@ class TMRandom (TeamMaker):
             for i in equiposNoFijados:
                 self.equiposGenerados[i] = alumnosAOrdenar[indice*self.alumnosxEquipo:self.alumnosxEquipo+self.alumnosxEquipo*indice]
                 indice +=1
-
         self._log("CREAR EQUIPOS","Agrupamiento aleatorio finalizado")
                 
 
@@ -234,7 +237,7 @@ class TMKmeans (TeamMaker):
         
         # Columnas numéricas
         cNumericas = selector(dtype_exclude="category")(self.alumnos)
-        
+
         # Columnas que corresponden a categorías
         categorias = selector(dtype_include="category")(self.alumnos)
         

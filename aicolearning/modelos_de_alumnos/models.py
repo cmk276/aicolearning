@@ -1,3 +1,4 @@
+import json
 from django.db import models
 
 CNUMERICA = "NU"
@@ -50,5 +51,9 @@ class DatoModelo(models.Model):
     id_alumno = models.CharField("id_alumno", max_length=10) 
     modelo = models.ForeignKey(DefinicionModelo, on_delete=models.CASCADE)
     datos = models.JSONField("datos")
+
+    def lista_datos(self):
+        return json.loads(self.datos)
+
     def __str__(self):
         return str(self.modelo.id)+" "+self.id_alumno
