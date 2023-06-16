@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{titulo}}</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container">
+  <h1>{{titulo}}</h1>
+  {% if agrupamientos %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Definición de modelo</th>
+          <th>Número de equipos</th>
+          <th>Alumnos</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for registro in agrupamientos %}
+          <tr>
+            <td><a href="{{registro.url_agrupamiento}}">{{ registro.etiqueta }}</a></td>
+            <td>{{ registro.modelo.nombre }}</td>
+            <td>{{ registro.num_equipos }}</td>
+            <td>{{ registro.num_alumnos }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No hay registros disponibles.</p>
+  {% endif %}
+</div>
+
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

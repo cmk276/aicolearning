@@ -1,4 +1,11 @@
+import json
 from django.db import models
+
+CNUMERICA = "NU"
+CNO_ORDENADA = "NO"
+CTEXTO = "TE"
+CBOOLEANA = "BO"
+CORDENADA = "OR"
 
 # Create your models here.
 class DefinicionModelo(models.Model):
@@ -10,17 +17,13 @@ class DefinicionModelo(models.Model):
         return self.nombre
     
 class Caracteristica(models.Model):
-    NUMERICA = "NU"
-    NO_ORDENADA = "NO"
-    TEXTO = "TE"
-    BOOLEANA = "BO"
-    ORDENADA = "OR"
+    
     ELECCION_TIPOS_CARACTERISTICAS = [
-        (NUMERICA, "Numérica"),
-        (NO_ORDENADA, "No Ordenada"),
-        (TEXTO, "Texto"),
-        (BOOLEANA, "Verdadero/Falso"),
-        (ORDENADA, "Ordenada")
+        (CNUMERICA, "Numérica"),
+        (CNO_ORDENADA, "No Ordenada"),
+        (CTEXTO, "Texto"),
+        (CBOOLEANA, "Verdadero/Falso"),
+        (CORDENADA, "Ordenada")
     ]
     etiqueta = models.CharField("etiqueta", max_length=100)
     descripcion = models.TextField
@@ -30,7 +33,7 @@ class Caracteristica(models.Model):
     tipo = models.CharField(
         max_length=2,
         choices=ELECCION_TIPOS_CARACTERISTICAS,
-        default=NUMERICA,
+        default=CNUMERICA,
     )
 
     def __str__(self):
@@ -39,7 +42,7 @@ class Caracteristica(models.Model):
 class ValorSeleccion(models.Model):
     num_orden = models.IntegerField("número de orden")
     etiqueta = models.CharField("nombre", max_length=100) 
-    Caracteristica = models.ForeignKey(Caracteristica, on_delete=models.CASCADE)
+    caracteristica = models.ForeignKey(Caracteristica, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.etiqueta
@@ -48,5 +51,9 @@ class DatoModelo(models.Model):
     id_alumno = models.CharField("id_alumno", max_length=10) 
     modelo = models.ForeignKey(DefinicionModelo, on_delete=models.CASCADE)
     datos = models.JSONField("datos")
+
+    def lista_datos(self):
+        return json.loads(self.datos)
+
     def __str__(self):
         return str(self.modelo.id)+" "+self.id_alumno

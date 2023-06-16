@@ -8,6 +8,7 @@ from django.db import models
 from .forms import FormImportarModelo
 from .models import DefinicionModelo, Caracteristica, DatoModelo
 import pandas as pd
+from django.views.generic import ListView
 
 # FICHERO CON INFO CORRECTA
 
@@ -120,3 +121,30 @@ def importar(request):
         form = FormImportarModelo()
     
     return render(request, 'modelos_de_alumnos/importar_modelo.html', {'form': form})
+
+class VistaModelo(ListView):
+    model = DatoModelo
+    template_name = "modelos_de_alumnos/modelo.html"
+    context_object_name = "datos_modelo"
+
+    def get_queryset(self):
+        # Recupera los datos de un solo modelo
+        return DatoModelo.objects.filter(modelo_id=self.kwargs['id_modelo'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Recupera el modelo
+        modelo = DefinicionModelo.objects.get(id=self.kwargs['id_modelo'])
+
+        print ("\n *** Recuperando modelo: "+str(modelo.nombre))
+
+        context['modelo'] = modelo
+        for dato in context['datos_modelo']:
+            print ("\n *** Recuperando alumno: "+str(dato.id_alumno))
+            dato.alumno = models.Alumno.objects.get(id_alumno=dato.id_alumno)
+            
+            print ("\n *** Recuperando datos del alumno: "+str(dato.lista_datos()))
+
+        
+        return context
