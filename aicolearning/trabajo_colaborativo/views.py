@@ -21,7 +21,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the trabajo colaborativo index.")
+    #return HttpResponse("Hello, world. You're at the trabajo colaborativo index.")
+    return render(request,"trabajo_colaborativo/index.html")
 
 # clase de vista que muestra el formulario de configuración de agrupamiento
 # recibe como parámetro el id del modelo de alumnos para el que se va a configurar el agrupamiento

@@ -1,0 +1,64 @@
+{% extends "trabajo_colaborativo/index_generic.html" %}
+
+{% block title %}
+- Inicio
+{% endblock %}
+
+{% block content %}
+<h1>AICoLearning</h1>
+
+  <p>Herramienta web para la creación de grupos colaborativos asistida por Machine Learning</p>
+  <div class="card-group">
+
+    <div class="card" style="width: 18rem;">
+      <div class="card-body">
+        <h5 class="card-title">Modelos</h5>
+        <h6 class="card-subtitle mb-2 text-body-secondary">Gestión de modelos de alumnos</h6>
+        <p class="card-text">Mantenimiento de la base de datos características sobre los alumnos que se usarán para realizar agrupamientos</p>
+      </div>
+      <div class="card-footer">
+        <a href="#" class="card-link">Ver</a>
+        <a href="#" class="card-link">Importar</a>
+      </div>
+    </div>
+    <div class="card" style="width: 18rem;">
+      <div class="card-body">
+        <h5 class="card-title">Agrupamientos</h5>
+        <h6 class="card-subtitle mb-2 text-body-secondary">Gestión de agrupamientos</h6>
+        <p class="card-text">Consulta de agrupamientos almacenados en el sistema</p>
+      </div>
+      <div class="card-footer">
+        <a href="#" class="card-link">Ver</a>
+        <a href="#" class="card-link">Nuevo</a>
+      </div>
+    </div>
+    <div class="card" style="width: 18rem;">
+      <div class="card-body">
+        <h5 class="card-title">Alumnos</h5>
+        <h6 class="card-subtitle mb-2 text-body-secondary"></h6>
+        <p class="card-text">Gestión de alumnos</p>
+      </div>
+      <div class="card-footer">
+        <a href="#" class="card-link">Ver</a>
+      </div>
+    </div>
+    <div class="card" style="width: 18rem;">
+      <div class="card-body">
+        <h5 class="card-title">Encuestas</h5>
+        <h6 class="card-subtitle mb-2 text-body-secondary"></h6>
+        <p class="card-text">Gestión de preguntas y configuración de encuestas para enviar al alumnado</p>
+      </div>
+      <div class="card-footer">
+        <a href="#" class="card-link">Ver</a>
+        <a href="#" class="card-link">Abiertas</a>
+        <a href="#" class="card-link">Nueva</a>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block pie_pagina %}
+
+<span class="text-body-secondary">AICoLearning - Francisco Tejeira - TFG Grado en Ingeniería en Informática UNIR</span>
+
+{% endblock %}
