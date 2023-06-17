@@ -13,6 +13,8 @@ class Persona(models.Model):
 class Alumno(Persona):
     id_alumno = models.CharField("id", max_length=10, default="0000000000")
     grupos = models.ManyToManyField("Grupo")
+    def nombre_completo(self):
+        return self.apellido1+" "+self.apellido2+" "+self.nombre
     def __str__(self):
         return self.nombre+self.apellido1+self.apellido2
     

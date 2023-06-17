@@ -1,0 +1,35 @@
+{% extends "trabajo_colaborativo/index_generic.html" %}
+
+{% block title %}
+- Alumnos
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <h1>Gestión de alumnos</h1>
+    <p><button type="button" class="btn btn-light">Crear nuevo</button></p>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Primer Apellido</th>
+                <th>Segundo Apellido</th>
+                <th>Nombre</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alumno in alumnos %}
+            <tr>
+                <td>{{ alumno.apellido1}}</td>
+                <td>{{ alumno.apellido2}}</td>
+                <td>{{ alumno.nombre }}</td>  
+                <td><a href="">Modificar</a> | <a href="">Eliminar</a> </td>
+                 
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
