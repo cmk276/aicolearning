@@ -15,28 +15,30 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                  <th>Agrupamiento</th>
-                  <th>Modelo asociado</th>
-                  <th>Equipos</th>
-                  <th>Alumnos</th>
-                  <th>Acciones</th>
+                    <th>ID</th>
+                    <th>Agrupamiento</th>
+                    <th>Modelo asociado</th>
+                    <th>Equipos</th>
+                    <th>Alumnos</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for registro in agrupamientos %}
                 <tr>
-                  <td>{{ registro.etiqueta }}</td>
-                  <td>
-                      {{ registro.modelo.nombre }}
-                      <span class="badge text-bg-light"><a class="link-underline-light link-body-emphasis" href="/modelos_de_alumnos/{{ registro.modelo.id }}">Ver</a></span>  
-                  </td>
-                  <td>{{ registro.num_equipos }}</td>
-                  <td>{{ registro.num_alumnos }}</td>
-                  <td>
-                    <span class="badge text-bg-light"><a class="link-underline-light link-body-emphasis" href="{{registro.url_agrupamiento}}">Consultar</a></span>  
-                    <span class="badge text-bg-light"><a class="link-underline-light link-body-emphasis" href="">Modificar</a></span>
-                      <span class="badge text-bg-danger">Eliminar</span>
-                  </td>
+                    <td>{{ registro.id }}</td>
+                    <td>{{ registro.etiqueta }}</td>
+                    <td>
+                        {{ registro.modelo.nombre }}
+                        <span class="badge text-bg-light"><a class="link-underline-light link-body-emphasis" href="/modelos_de_alumnos/{{ registro.modelo.id }}">Ver</a></span>  
+                    </td>
+                    <td>{{ registro.num_equipos }}</td>
+                    <td>{{ registro.num_alumnos }}</td>
+                    <td>
+                        <span class="badge text-bg-light"><a class="link-underline-light link-body-emphasis" href="{{registro.url_agrupamiento}}">Consultar</a></span>  
+                        <span class="badge text-bg-light"><a class="link-underline-light link-body-emphasis" href="">Modificar</a></span>
+                        <span class="badge text-bg-danger">Eliminar</span>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
