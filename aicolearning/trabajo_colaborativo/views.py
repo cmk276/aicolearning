@@ -4,7 +4,8 @@ from .forms import FormConfigurarAgrupamiento
 from django.views import generic 
 from django.views.generic import ListView
 from django.db import models
-from trabajo_colaborativo.models import Agrupamiento
+from trabajo_colaborativo.models import Agrupamiento, Equipo
+from modelos_de_alumnos.models import DefinicionModelo
 from django.views import View
 from django.views.generic.edit import FormView
 import pandas as pd
@@ -227,7 +228,56 @@ class VistaEquipo(View):
         return render(request, 'trabajo_colaborativo/vista_equipo.html', {'tabla_html': tabla_html, 'nombre_equipo': nombre_equipo})
 
 # Esta vista sí accede directamente a los modelos de la base de datos
-class VistaEquipos (View):
+class VistaEquipos(ListView):
+    template_name = 'trabajo_colaborativo/equipos.html'
+    paginate_by = 10
+    context_object_name = 'equipos'
+
+    # filtramos los equipos del agrupamiento
+    def get_queryset(self):
+        id_agrupamiento = self.kwargs['id_agrupamiento']
+        return Equipo.objects.filter(de_agrupamiento_id=id_agrupamiento).order_by("nombre")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['agrupamiento'] = Agrupamiento.objects.get(id=self.kwargs['id_agrupamiento'])
+        context['mostrar_info'] = self.kwargs['mostrar_info']
+        context['ids_caracteristicas'] = self.kwargs['ids_caracteristicas']   
+
+         # Recorremos los agrupamientos para añadir datos adicionales
+        for equipo in context['equipos']:
+            # Obtenemos el número de alumnos de ese equipo
+            equipo.num_alumnos = equipo.alumnos.count()
+
+            nombres_alumnos = ""
+            num_alumnos = 0
+            # recorremos los alumnos del equipo y vamos añadiendo sus nombres a nombres_alumnos
+            for alumno in equipo.alumnos.all():
+                if num_alumnos>4:
+                    nombres_alumnos = nombres_alumnos + " [...]"
+                    break
+                
+                if num_alumnos>0:
+                    nombres_alumnos =  nombres_alumnos + ", "
+
+                nombres_alumnos = nombres_alumnos + alumno.nombre
+                num_alumnos += 1
+                    
+                
+            equipo.nombres_alumnos = nombres_alumnos
+
+            # Obtenemos la URL a la que se va a llamar desde el enlace de cada equipo
+            if context['ids_caracteristicas'] == "":
+                url = reverse('trabajo_colaborativo:ver_equipo', args=[context['agrupamiento'].id, equipo.id, context['mostrar_info']])
+            else:
+                url = reverse('trabajo_colaborativo:ver_equipo', args=[context['agrupamiento'].id, equipo.id, context['mostrar_info'], context['ids_caracteristicas']])
+            equipo.url = url
+            print("\nURL: ", url)
+
+                
+        return context
+
+class VistaEquiposBORRAR (View):
     def get(self, request, id_agrupamiento, mostrar_info, ids_caracteristicas):
 
         print("------------------ VistaEquipos ------------------")
@@ -263,7 +313,6 @@ class VistaEquipos (View):
 
 # Clase para gestionar el listado de agrupamientos
 class VistaAgrupamientos(ListView):
-    #model = Agrupamiento
     queryset = Agrupamiento.objects.order_by("etiqueta")
     template_name = 'trabajo_colaborativo/agrupamientos.html'
     paginate_by = 10
