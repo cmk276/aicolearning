@@ -7,6 +7,7 @@ from django import forms
 #clase para un formulario que recibe un nombre de modelo y un fichero csv
 class FormImportarModelo(forms.Form):
     nombre_modelo = forms.CharField(label="Nombre del modelo", widget=forms.TextInput(attrs={'class': 'form-control'}))
+    descripcion = forms.CharField(label="Descripción", widget=forms.Textarea(attrs={'class': 'form-control'}))
     fichero_csv = forms.FileField(label="Archivo CSV", widget=forms.FileInput(attrs={'class': 'form-control'}))
 
     def validar_nombre_modelo(self):
