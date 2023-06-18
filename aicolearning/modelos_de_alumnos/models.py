@@ -10,7 +10,7 @@ CORDENADA = "OR"
 # Create your models here.
 class DefinicionModelo(models.Model):
     nombre = models.CharField("nombre", max_length=50)
-    descripcion = models.TextField
+    descripcion = models.TextField("descripcion", blank=True, null=True)
     caracteristicas = models.ManyToManyField("Caracteristica")
 
     def __str__(self):

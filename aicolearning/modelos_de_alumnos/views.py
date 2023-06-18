@@ -14,13 +14,12 @@ from django.views.generic import ListView
 # Importamos los modelos del centro de estudios
 from centro_de_estudios import models 
 
-class IndexView(generic.ListView):
-    template_name = "modelos_de_alumnos/index.html"
-    context_object_name = "modelo_list"
+class VistaModelos(generic.ListView):
+    template_name = "modelos_de_alumnos/modelos.html"
+    paginate_by = 10  # Cantidad de registros por página
+    queryset = DefinicionModelo.objects.order_by("nombre")
+    context_object_name = "lista_modelos"
 
-    def get_queryset(self):
-        """Devuelve los modelos ordenados por nombre"""
-        return DefinicionModelo.objects.order_by("id")
 
 
 class DetailView(generic.DetailView):

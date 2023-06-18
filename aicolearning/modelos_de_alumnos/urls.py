@@ -5,8 +5,7 @@ from . import views
 app_name = "modelos_de_alumnos"
 urlpatterns = [
     # ex: /modelos_de_alumnos/
-    #path("", views.index, name="index"),
-    path("", views.IndexView.as_view(), name="index"),
+    path("", views.VistaModelos.as_view(), name="modelos"),
     
     # Muestra los datos de un modelo de alumnos
     # ex: /modelos_de_alumnos/5/

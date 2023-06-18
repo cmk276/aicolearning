@@ -24,7 +24,10 @@
                 <td>{{ alumno.apellido1}}</td>
                 <td>{{ alumno.apellido2}}</td>
                 <td>{{ alumno.nombre }}</td>  
-                <td><a href="">Modificar</a> | <a href="">Eliminar</a> </td>
+                <td>
+                    <span class="badge text-bg-light"><a class="link-underline-light link-body-emphasis" href="">Modificar</a></span>
+                    <span class="badge text-bg-danger">Eliminar</span>
+                </td>
                  
             </tr>
             {% endfor %}
