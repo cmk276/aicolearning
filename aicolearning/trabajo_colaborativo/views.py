@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import get_list_or_404, get_object_or_404, render
 from django.urls import reverse_lazy, reverse
 from .forms import FormConfigurarAgrupamiento 
@@ -5,7 +6,7 @@ from django.views import generic
 from django.views.generic import ListView
 from django.db import models
 from trabajo_colaborativo.models import Agrupamiento, Equipo
-from modelos_de_alumnos.models import DefinicionModelo
+from modelos_de_alumnos.models import DefinicionModelo, DatoModelo
 from django.views import View
 from django.views.generic.edit import FormView
 import pandas as pd
@@ -185,9 +186,81 @@ class VistaAgrupar(View):
         url = reverse('trabajo_colaborativo:ver_equipos', kwargs={'id_agrupamiento' : id_agrupamiento, 'mostrar_info': 1})
 
         return HttpResponseRedirect(url)
+
+class VistaEquipo(ListView):
+    template_name = 'trabajo_colaborativo/equipo.html'
+    paginate_by = 10
+    context_object_name = 'alumnos'
+
+    # filtramos los alumnos del equipo
+    def get_queryset(self):
+        e = Equipo.objects.get(id=self.kwargs['id_equipo'])
+        return e.alumnos.order_by("nombre")  
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['agrupamiento'] = Agrupamiento.objects.get(id=self.kwargs['id_agrupamiento'])
+        context['equipo'] = Equipo.objects.get(id=self.kwargs['id_equipo'])
+        context['mostrar_info'] = self.kwargs['mostrar_info']
+        context['ids_caracteristicas'] = self.kwargs['ids_caracteristicas']
+
+        id_modelo_alumnos = tcu.get_id_modelo_alumnos(self.kwargs['id_agrupamiento'])
+
+        context['modelo'] = DefinicionModelo.objects.get(id=id_modelo_alumnos)
+
+        # Obtenemos las etiquetas de las características
+        # Si mostrar_info es 1, se cargan los literales de las características
+        if (context['mostrar_info'] == 1):
+
+            if (context['ids_caracteristicas']==""):
+                # Mostrar info y sin ids_características: se muestran todas las características
+                caracteristicas = tcu.get_caracteristicas_modelo_alumnos(id_modelo_alumnos)
+            else:
+                # Se muestran solo las etiquetas de las características pasadas como parámetro
+                context['ids_caracteristicas'] = context['ids_caracteristicas'].split(",")
+                caracteristicas = tcu.get_etiquetas_caracteristicas(id_modelo_alumnos, context['ids_caracteristicas'])
+        else:
+            caracteristicas = []
+
+        # En el contexto devolvemos las características separadas por comas
+        context['caracteristicas'] = ", ".join(caracteristicas)
         
 
-class VistaEquipo(View):
+        # recorremos los alumnos del queryset
+        for alumno in context['alumnos']:
+            # Extrae los datos del alumno guardados en el modelo
+            print("\n ID ALUMNO: ", alumno.id_alumno)
+            datos_alumno = get_list_or_404(DatoModelo, modelo_id=id_modelo_alumnos, id_alumno=alumno.id_alumno)
+                
+            # Crea una lista con los datos del alumno
+            lista_datos_alumno = []
+            # Recorre los datos del alumno
+            for dato_alumno in datos_alumno:
+                        
+                        # El dato del alumno está guardado como un json
+                        # Convierte el json en una lista de tuplas
+                        valores_alumno = json.loads(dato_alumno.datos)
+
+                        # Por cada característica, la buscamos en valores_alumno y añadimos su valor a la lista
+                        # si no está, se añade np.nan
+                        for caracteristica in caracteristicas:
+                                # Busca la característica en los valores del alumno
+                                # Si está, añade su valor a la lista
+                                # Si no está, añade np.nan
+                                if caracteristica in valores_alumno:
+                                        lista_datos_alumno.append(str(valores_alumno[caracteristica]))
+                                else:
+                                        lista_datos_alumno.append("")
+            
+            # Añade los datos del alumno al contexto como cadena separada por comas
+            alumno.datos = ", ".join(lista_datos_alumno)
+
+
+        return context
+            
+
+class VistaEquipoBORRAR(View):
 
     def get(self, request, id_agrupamiento, id_equipo, mostrar_info, ids_caracteristicas):
         
@@ -225,7 +298,7 @@ class VistaEquipo(View):
         tabla_html = df_equipo.to_html(index=False)
         
         nombre_equipo = tcu.get_nombre_equipo(id_agrupamiento, id_equipo)
-        return render(request, 'trabajo_colaborativo/vista_equipo.html', {'tabla_html': tabla_html, 'nombre_equipo': nombre_equipo})
+        return render(request, 'trabajo_colaborativo/equipo.html', {'tabla_html': tabla_html, 'nombre_equipo': nombre_equipo})
 
 # Esta vista sí accede directamente a los modelos de la base de datos
 class VistaEquipos(ListView):
