@@ -6,7 +6,7 @@ app_name = "trabajo_colaborativo"
 urlpatterns = [
     path("", views.index, name="index"),
 
-     # path para la configuración de agrupamiento pasando un número de alumnos por grupo
+    # Vista de agrupamientos
     path("agrupamientos/", views.VistaAgrupamientos.as_view(), name="agrupamientos"),
 
     # path para la configuración de agrupamiento pasando un número de alumnos por grupo

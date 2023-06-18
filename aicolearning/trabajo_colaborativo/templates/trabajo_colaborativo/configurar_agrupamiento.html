@@ -1,3 +1,24 @@
+{% extends "trabajo_colaborativo/index_generic.html" %}
+
+{% block title %}
+- Crear agrupamiento {{modelo.nombre}}
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <h1>Configurar agrupamiento {{ modelo.nombre }}</h1>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_div }}
+    </br>
+        <button type="submit">Agrupar</button>
+    </form>
+</div>
+
+{% endblock %}
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -6,10 +27,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
 </head>
 <body>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_div }}
-        <button type="submit">Agrupar</button>
-      </form>
+    
 </body>
 </html>
