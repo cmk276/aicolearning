@@ -13,6 +13,15 @@ class DefinicionModelo(models.Model):
     descripcion = models.TextField("descripcion", blank=True, null=True)
     caracteristicas = models.ManyToManyField("Caracteristica")
 
+    def cadena_caracteristicas(self):
+        # recorremos las características y devolvemos una cadena con el nombre de las 10 primeras
+        cadena = ""
+        # obtenemos las características del modelo con id
+        caracteristicas = Caracteristica.objects.filter(definicion_modelo=self.id)[:5]
+        for caracteristica in caracteristicas:
+            cadena = cadena + caracteristica.etiqueta + ", "
+        return cadena    
+
     def __str__(self):
         return self.nombre
     
@@ -52,8 +61,22 @@ class DatoModelo(models.Model):
     modelo = models.ForeignKey(DefinicionModelo, on_delete=models.CASCADE)
     datos = models.JSONField("datos")
 
-    def lista_datos(self):
-        return json.loads(self.datos)
+    def cadena_datos(self):
+        datos= json.loads(self.datos)
+        
+        # Extraemos una lista con los valores del diccionario datos
+        lista_datos = list(datos.values())
+
+        # recorremos lista_datos para ir añadiendo los cinco primeros valores a una cadena
+        cadena = ""
+        for i in range(0,5):
+            try:
+                cadena = cadena + str(lista_datos[i]) + ",  "
+            except:
+                # salimos del bucle cuando no quedan más valores en lista_datos
+                break
+        
+        return cadena
 
     def __str__(self):
         return str(self.modelo.id)+" "+self.id_alumno

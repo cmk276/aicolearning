@@ -21,12 +21,6 @@ class VistaModelos(generic.ListView):
     context_object_name = "lista_modelos"
 
 
-
-class DetailView(generic.DetailView):
-    model = DefinicionModelo
-    template_name = "modelos_de_alumnos/detail.html"
-
-
 # útiles para el formulario ImportarModelo
 #Leer un fichero csv y convertirlo a un pandas dataframe
 def leer_csv(fichero):
@@ -123,11 +117,12 @@ def importar(request):
 class VistaModelo(ListView):
     model = DatoModelo
     template_name = "modelos_de_alumnos/modelo.html"
+    paginate_by = 10  # Cantidad de registros por página
     context_object_name = "datos_modelo"
 
     def get_queryset(self):
         # Recupera los datos de un solo modelo
-        return DatoModelo.objects.filter(modelo_id=self.kwargs['id_modelo'])
+        return DatoModelo.objects.filter(modelo_id=self.kwargs['id_modelo']).order_by("id")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -142,7 +137,7 @@ class VistaModelo(ListView):
             print ("\n *** Recuperando alumno: "+str(dato.id_alumno))
             dato.alumno = models.Alumno.objects.get(id_alumno=dato.id_alumno)
             
-            print ("\n *** Recuperando datos del alumno: "+str(dato.lista_datos()))
+            print ("\n *** Recuperando datos del alumno: "+str(dato.cadena_datos()))
 
         
         return context
