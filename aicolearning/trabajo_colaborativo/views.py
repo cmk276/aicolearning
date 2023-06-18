@@ -263,8 +263,10 @@ class VistaEquipos (View):
 
 # Clase para gestionar el listado de agrupamientos
 class VistaAgrupamientos(ListView):
-    model = Agrupamiento
+    #model = Agrupamiento
+    queryset = Agrupamiento.objects.order_by("etiqueta")
     template_name = 'trabajo_colaborativo/agrupamientos.html'
+    paginate_by = 10
     context_object_name = 'agrupamientos'
 
     def get_context_data(self, **kwargs):
