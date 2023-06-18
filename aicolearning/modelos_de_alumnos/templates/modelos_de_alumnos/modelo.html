@@ -1,7 +1,10 @@
 {% extends "trabajo_colaborativo/index_generic.html" %}
 
 {% block title %}
-- Modelo
+- {{ modelo.nombre }}
+{% endblock %}
+
+{% block header %}
 {% endblock %}
 
 {% block content %}
@@ -30,7 +33,7 @@
                     <td>{{ m.alumno.nombre_completo}}</td>
                     <td>{{ m.cadena_datos }} </td>
                     <td>
-                        <span class="badge text-bg-light"><a class="link-underline-light link-body-emphasis" href="{% url 'modelos_de_alumnos:vista_modelo' m.id %}">Modificar</a></span>
+                        <span class="badge text-bg-light"><a class="link-underline-light link-body-emphasis" href="">Modificar</a></span>
                         <span class="badge text-bg-danger">Eliminar</span>
                     </td>
                 </tr>
