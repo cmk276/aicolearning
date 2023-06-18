@@ -6,7 +6,7 @@ from .trabajo_colaborativo_utiles import TIPOS_AGRUPAMIENTO
 # y permite elegir entre agrupamiento aleatorio, homogéneo y heterogéneo
 
 class FormConfigurarAgrupamiento(forms.Form):
-    
+    nombre_agrupamiento = forms.CharField(required=True, label="Indique un nombre para el agrupamiento")
     alumnos_por_grupo = forms.IntegerField(required=True, label="Número de alumnos por grupo")
     caracteristicas = forms.MultipleChoiceField(choices=[], 
         widget=forms.CheckboxSelectMultiple, required=True, label="Seleccione al menos una característica:"
@@ -19,6 +19,7 @@ class FormConfigurarAgrupamiento(forms.Form):
         alumnos_por_grupo = cleaned_data.get("alumnos_por_grupo")
         tipo_agrupamiento = cleaned_data.get("tipo_agrupamiento")
         caracteristicas = cleaned_data.get("caracteristicas")
+        nombre_agrupamiento = cleaned_data.get("nombre_agrupamiento")
         
         print("\nVALIDANDO CARACTERISTICAS: ", caracteristicas)
 
@@ -28,6 +29,8 @@ class FormConfigurarAgrupamiento(forms.Form):
             raise forms.ValidationError("Debe seleccionar al menos una característica")
         if tipo_agrupamiento is None:
             raise forms.ValidationError("Debe seleccionar un tipo de agrupamiento")
+        if nombre_agrupamiento is None:
+            raise forms.ValidationError("Debe introducir un nombre para el modelo de alumno")
         return cleaned_data
 
     

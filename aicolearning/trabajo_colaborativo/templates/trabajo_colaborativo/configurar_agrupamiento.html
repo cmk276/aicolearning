@@ -1,17 +1,18 @@
 {% extends "trabajo_colaborativo/index_generic.html" %}
 
 {% block title %}
-- Crear agrupamiento {{modelo.nombre}}
+- Crear agrupamiento: {{modelo.nombre}}
 {% endblock %}
 
 {% block content %}
 
 <div class="container">
-    <h1>Configurar agrupamiento {{ modelo.nombre }}</h1>
-    
+    <h1>Configurar agrupamiento</h1>
+    <h3>{{ modelo.nombre }}</h3>
+    </br>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ form.as_div }}
+        {{ form.as_table }}
     </br>
         <button type="submit">Agrupar</button>
     </form>

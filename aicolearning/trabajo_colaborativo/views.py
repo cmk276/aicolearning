@@ -54,6 +54,7 @@ class VistaConfigurarAgrupamiento(View):
         form.fields["alumnos_por_grupo"].initial = num_alumnos_por_grupo
         form.fields["caracteristicas"].choices = [(caracteristica, caracteristica) for caracteristica in self.caracteristicas]
         context = {'form': form}
+        context["modelo"] = DefinicionModelo.objects.get(pk=id_modelo_alumnos)
         return render(request, 
                       "trabajo_colaborativo/configurar_agrupamiento.html", 
                       context)
@@ -73,6 +74,7 @@ class VistaConfigurarAgrupamiento(View):
             tipo_agrupamiento = form.cleaned_data['tipo_agrupamiento']
             caracteristicas = form.cleaned_data['caracteristicas']
             num_alumnos_por_grupo = form.cleaned_data['alumnos_por_grupo']
+            nombre_agrupamiento = form.cleaned_data['nombre_agrupamiento']
 
             print("V \n FORMULARIO RECIBIDO: Tipo agrupamiento[" + str(tipo_agrupamiento) + "]\n"+str(caracteristicas))
             
@@ -90,6 +92,7 @@ class VistaConfigurarAgrupamiento(View):
             url = reverse('trabajo_colaborativo:agrupar', kwargs={'id_modelo_alumnos': id_modelo_alumnos,
                                                                     'alumnos_por_grupo': num_alumnos_por_grupo,
                                                                     'tipo_agrupamiento': tipo_agrupamiento,
+                                                                    'nombre_agrupamiento': nombre_agrupamiento,
                                                                     'ids_caracteristicas': cadena_ids_caracteristicas,
                                                                     'ids_alumnos': self.cadena_ids_alumnos
                                                                     })
@@ -139,6 +142,9 @@ class VistaAgrupar(View):
         # Tipo de agrupamiento
         self.tipo_agrupamiento = kwargs["tipo_agrupamiento"]
 
+        # Nombre del agrupamiento
+        self.nombre_agrupamiento = kwargs["nombre_agrupamiento"]
+
         # Obtenemos los ids de los alumnos
         cadena_ids_alumnos = kwargs["ids_alumnos"]
         if (cadena_ids_alumnos == ""):
@@ -180,7 +186,7 @@ class VistaAgrupar(View):
         # Guardamos el agrupamiento en la base de datos
         print ("\nEQUIPOS CREADOS: \n", TM.equiposGenerados)
 
-        id_agrupamiento = tcu.guardar_equipos(TM, self.id_modelo_alumnos ,self.ids_alumnos)
+        id_agrupamiento = tcu.guardar_equipos(TM, self.nombre_agrupamiento, self.id_modelo_alumnos, self.ids_alumnos)
                                                                               
         # Generamos la URL para ver el listado de los equipos generados en el agrupamiento
         url = reverse('trabajo_colaborativo:ver_equipos', kwargs={'id_agrupamiento' : id_agrupamiento, 'mostrar_info': 1})

@@ -257,12 +257,15 @@ def agrupar(alumnos_por_equipo, tipo_agrupamiento, dfalumnos, verbose = False, f
         return TM  
 
 # Guarda los equipos en la base de datos y devuelve el id del agrupamiento generado
-def guardar_equipos(TM : teammaker.TeamMaker, id_modelo, ids_alumnos):
+def guardar_equipos(TM : teammaker.TeamMaker, nombre_agrupamiento, id_modelo, ids_alumnos):
         try:
                 # Crea un objeto agrupamiento
                 Agrupamiento = tc_models.Agrupamiento()
                 Agrupamiento.modelo = mda_models.DefinicionModelo.objects.get(id=id_modelo)
-                Agrupamiento.etiqueta = Agrupamiento.modelo.nombre
+                if nombre_agrupamiento=="":
+                        Agrupamiento.etiqueta = Agrupamiento.modelo.nombre
+                else:
+                        Agrupamiento.etiqueta = nombre_agrupamiento
                 Agrupamiento.save()
 
                 print ("\n Agrupamiento creado: ", Agrupamiento.etiqueta)

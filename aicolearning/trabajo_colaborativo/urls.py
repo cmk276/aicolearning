@@ -20,13 +20,13 @@ urlpatterns = [
 
      # Vista para realizar el agrupamiento
      # ex /trabajo_colaborativo/agrupar/26/10/aleatorio/1,4,5/1,2,3,4,5,6,7
-     path("agrupar/<int:id_modelo_alumnos>/<int:alumnos_por_grupo>/<str:tipo_agrupamiento>/<str:ids_caracteristicas>/<str:ids_alumnos>",
+     path("agrupar/<int:id_modelo_alumnos>/<int:alumnos_por_grupo>/<str:tipo_agrupamiento>/<str:nombre_agrupamiento>/<str:ids_caracteristicas>/<str:ids_alumnos>",
           views.VistaAgrupar.as_view(),
           name="agrupar"),
 
      # Vista para realizar el agrupamiento sin pasar ids de alumnos
      # ex /trabajo_colaborativo/agrupar/26/10/aleatorio/1,4,5/
-     path("agrupar/<int:id_modelo_alumnos>/<int:alumnos_por_grupo>/<str:tipo_agrupamiento>/<str:ids_caracteristicas>/",
+     path("agrupar/<int:id_modelo_alumnos>/<int:alumnos_por_grupo>/<str:tipo_agrupamiento>/<str:nombre_agrupamiento>/<str:ids_caracteristicas>/",
           views.VistaAgrupar.as_view(),
           {'ids_alumnos': ""},
           name="agrupar"),
