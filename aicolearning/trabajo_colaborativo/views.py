@@ -188,8 +188,10 @@ class VistaAgrupar(View):
 
         id_agrupamiento = tcu.guardar_equipos(TM, self.nombre_agrupamiento, self.id_modelo_alumnos, self.ids_alumnos, self.tipo_agrupamiento, self.ids_caracteristicas)
                                                                               
+        # Convertimos la lista ids_caracteristicas a una cadena separada por comas
+        cadena_ids_caracteristicas = ",".join(self.ids_caracteristicas)
         # Generamos la URL para ver el listado de los equipos generados en el agrupamiento
-        url = reverse('trabajo_colaborativo:ver_equipos', kwargs={'id_agrupamiento' : id_agrupamiento, 'mostrar_info': 1})
+        url = reverse('trabajo_colaborativo:ver_equipos', kwargs={'id_agrupamiento' : id_agrupamiento, 'mostrar_info': 1, 'ids_caracteristicas': cadena_ids_caracteristicas})
 
         return HttpResponseRedirect(url)
 
@@ -345,6 +347,13 @@ class VistaEquipos(ListView):
                 
             equipo.nombres_alumnos = nombres_alumnos
 
+            # Si ids_está vacío, leemos las caraacterísticas del agrupamiento (si se guardaron) y creamos una cadena con sus ids separados por comas
+            lista_caraacteristicas = []
+            if context['ids_caracteristicas'] == "":
+                for c in context['agrupamiento'].caracteristicas.all():
+                    lista_caraacteristicas.append(str(c.id))
+                context['ids_caracteristicas'] = ",".join(lista_caraacteristicas)
+            
             # Obtenemos la URL a la que se va a llamar desde el enlace de cada equipo
             if context['ids_caracteristicas'] == "":
                 url = reverse('trabajo_colaborativo:ver_equipo', args=[context['agrupamiento'].id, equipo.id, context['mostrar_info']])
