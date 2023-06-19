@@ -29,6 +29,7 @@
                     <td>{{ m.nombre}}</td>
                     <td>{{ m.descripcion}}</td>
                     <td>
+                        <span class="badge text-bg-light"><a class="link-underline-light link-body-emphasis" href="{% url 'trabajo_colaborativo:configurar_agrupamiento' m.id 1 2 %}">Crear grupos</a></span>
                         <span class="badge text-bg-light"><a class="link-underline-light link-body-emphasis" href="{% url 'modelos_de_alumnos:vista_modelo' m.id %}">Modificar</a></span>
                         <span class="badge text-bg-light">Exportar</span>
                         <span class="badge text-bg-danger">Eliminar</span>
