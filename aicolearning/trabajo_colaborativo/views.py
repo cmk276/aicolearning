@@ -186,7 +186,7 @@ class VistaAgrupar(View):
         # Guardamos el agrupamiento en la base de datos
         print ("\nEQUIPOS CREADOS: \n", TM.equiposGenerados)
 
-        id_agrupamiento = tcu.guardar_equipos(TM, self.nombre_agrupamiento, self.id_modelo_alumnos, self.ids_alumnos)
+        id_agrupamiento = tcu.guardar_equipos(TM, self.nombre_agrupamiento, self.id_modelo_alumnos, self.ids_alumnos, self.tipo_agrupamiento, self.ids_caracteristicas)
                                                                               
         # Generamos la URL para ver el listado de los equipos generados en el agrupamiento
         url = reverse('trabajo_colaborativo:ver_equipos', kwargs={'id_agrupamiento' : id_agrupamiento, 'mostrar_info': 1})

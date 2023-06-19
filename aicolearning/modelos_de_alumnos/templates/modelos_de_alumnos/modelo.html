@@ -12,6 +12,7 @@
 <div class="container">
     <h1>{{ modelo.nombre }} </h1>
     <span class="badge badge text-bg-info">{{ datos_modelo.count }} registros</span>
+    <span class="badge text-bg-light"><a class="link-underline-light link-body-emphasis" href="{% url 'trabajo_colaborativo:configurar_agrupamiento' modelo.id 1 2 %}">Crear grupos</a></span>
     <span class="badge text-bg-light">Exportar</span>
     <span class="badge text-bg-danger">Eliminar</span>
     <p>{{ modelo.descripcion }}</p>
