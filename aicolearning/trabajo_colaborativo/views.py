@@ -1,5 +1,5 @@
 import json
-from django.shortcuts import get_list_or_404, get_object_or_404, render
+from django.shortcuts import get_list_or_404, get_object_or_404, redirect, render
 from django.urls import reverse_lazy, reverse
 from .forms import FormConfigurarAgrupamiento 
 from django.views import generic 
@@ -435,3 +435,16 @@ class VistaAgrupamientos(ListView):
         
         print ("\nContexto: ", context)
         return context
+
+class VistaEliminarAgrupamiento(View):
+    def get(self, request, id_agrupamiento):
+        print("------------------ VistaEliminarAgrupamiento ------------------")
+        # Buscamos el agrupamiento
+        agrupamiento = get_object_or_404(Agrupamiento,id=id_agrupamiento)
+        print ("\nNombre agrupamiento: ", agrupamiento.etiqueta)
+
+        # Eliminamos el agrupamiento
+        agrupamiento.delete()
+
+        # Redirigimos a la vista de agrupamientos
+        return redirect('trabajo_colaborativo:agrupamientos')

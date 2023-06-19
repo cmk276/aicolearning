@@ -49,5 +49,9 @@ urlpatterns = [
            views.VistaEquipos.as_view(), 
            {'ids_caracteristicas': ""},
            name="ver_equipos"),
+
+      # Vista para eliminar un agrupamiento -> Elimina un agrupamiento y vuelve a la vista de agrupamientos
+      path ("eliminar_agrupamiento/<int:id_agrupamiento>/",
+            views.VistaEliminarAgrupamiento.as_view(), name="eliminar_agrupamiento"),
         
 ]
