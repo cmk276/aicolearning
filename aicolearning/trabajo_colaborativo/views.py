@@ -7,6 +7,7 @@ from django.views.generic import ListView
 from django.db import models
 from trabajo_colaborativo.models import Agrupamiento, Equipo
 from modelos_de_alumnos.models import DefinicionModelo, DatoModelo
+from centro_de_estudios.models import Alumno
 from django.views import View
 from django.views.generic.edit import FormView
 import pandas as pd
@@ -448,3 +449,56 @@ class VistaEliminarAgrupamiento(View):
 
         # Redirigimos a la vista de agrupamientos
         return redirect('trabajo_colaborativo:agrupamientos')
+    
+class VistaExportarAgrupamiento(View):
+    def get(self, request, id_agrupamiento):
+        # Buscamos el agrupamiento
+        agrupamiento = get_object_or_404(Agrupamiento,id=id_agrupamiento)
+        nombre_fichero = agrupamiento.etiqueta + ".csv"
+        
+        # Obtenemos el modelo
+        modelo = agrupamiento.modelo
+
+        # Obtenemos las etiquetas de las caracteristicas del modelo
+        ids_caracteristicas = tcu.get_ids_caracteristicas_modelo_alumnos(modelo.id)
+        etiquetas_caracteristicas = tcu.get_etiquetas_caracteristicas(modelo.id, ids_caracteristicas)
+        dfAgrupamiento = pd.DataFrame()
+
+        # Recorremos cada equipo del agrupamiento
+        for equipo in agrupamiento.equipos.all():
+            # Obtenemos los ids de los alumnos del equipo
+            ids_alumnos = tcu.get_ids_alumnos_equipo(id_agrupamiento, equipo.id)
+
+            # generamos un dataframe con los datos de los alumnos de ese equipo
+            df = tcu.generar_dataframe(modelo.id, ids_alumnos, etiquetas_caracteristicas)
+
+            # Añadimos la lista de ids de los alumnos del equipo como la primera columna del dataframe
+            df.insert(0, 'id_alumno', ids_alumnos)
+
+            # Añade columnas con los nombres y apellidos de los alumnos
+            nombres_alumnos = []
+            apellido1_alumnos = []
+            apellido2_alumnos = []
+            for id_alumno in ids_alumnos:
+                a = get_object_or_404(Alumno, id_alumno=id_alumno)
+                nombres_alumnos.append(a.nombre)
+                apellido1_alumnos.append(a.apellido1)
+                apellido2_alumnos.append(a.apellido2)
+
+            df.insert(1, "nombre", nombres_alumnos)
+            df.insert(2, "apellido1", apellido1_alumnos)
+            df.insert(3, "apellido2", apellido2_alumnos)
+            
+            # Añadimos una primera columna con el id del equipo
+            df.insert(4, 'id_equipo', equipo.id)
+            # Añadimos una segunda columna con el nombre del equipo
+            df.insert(5, 'nombre_equipo', equipo.nombre)
+
+            # Añadimos el dataframe al inicio de dataframe del agrupamiento usando el método concat
+            dfAgrupamiento = pd.concat([df, dfAgrupamiento], ignore_index=True)
+            
+        # Generamos el fichero csv
+        response = HttpResponse(content_type='text/csv', charset='utf-8-sig')
+        response['Content-Disposition'] = 'attachment; filename="'+ nombre_fichero+'"'
+        dfAgrupamiento.to_csv(path_or_buf=response, sep=';', index=False)
+        return response

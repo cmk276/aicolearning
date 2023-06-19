@@ -53,5 +53,10 @@ urlpatterns = [
       # Vista para eliminar un agrupamiento -> Elimina un agrupamiento y vuelve a la vista de agrupamientos
       path ("eliminar_agrupamiento/<int:id_agrupamiento>/",
             views.VistaEliminarAgrupamiento.as_view(), name="eliminar_agrupamiento"),
+
+      # Vista para exportar a un fichero csv los datos de un agrupamiento
+      path ("exportar_agrupamiento/<int:id_agrupamiento>/",
+            views.VistaExportarAgrupamiento.as_view(), name="exportar_agrupamiento"),
+            
         
 ]
