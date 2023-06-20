@@ -45,11 +45,13 @@
               <li class="page-item active">
                 <a class="page-link" href="?page={{ num }}">{{ num }}</a>
               </li>
-            {% else %}
-              <li class="page-item">
-                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-              </li>
-            {% endif %}
+              {% else %}
+              {% if num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                  <li class="page-item">
+                      <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                  </li>
+              {% endif %}
+          {% endif %}
           {% endfor %}
           {% if page_obj.has_next %}
             <li class="page-item">
