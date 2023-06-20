@@ -1,3 +1,10 @@
+'''
+AICoLearning
+Herramienta web para la creación de grupos colaborativos asistida por Machine Learning
+Código desarrollado por: Francisco Tejeira Bújez
+Para el Proyecto fin de Grado de Ingeniería Informática de la UNIR
+2023
+'''
 """Módulo TeamMaker
 
 Incluye la definición de clases para realizar agrupamientos de alumnos
@@ -252,6 +259,8 @@ class TMKmeans (TeamMaker):
                 ("ordinalEncoder", preprocessing.OrdinalEncoder())
             ]
         )  
+
+        
         # Las categorías no ordenadas se transforman convirtiendo cada posible valor
         # a una nueva columna que contendrá ceros y unos
         # En caso de ser binarias, se elimina una de las dos columnas  
@@ -275,11 +284,20 @@ class TMKmeans (TeamMaker):
                 ("noOrdenadas", transformar_cat_no_ordenadas, cNoOrdenadas),
             ]
         )
-    
+
+        '''
         # Creamos un pipeline con el procesador configurado
         self._Pipeline = Pipeline(
             steps = [
                 ("procesarCategorias",procesadorColumnas)
+            ]
+        )
+        '''
+         # Creamos un pipeline con el procesador configurado
+        self._Pipeline = Pipeline(
+            steps = [
+                ("procesarCategorias",procesadorColumnas),
+                ("normalizar", preprocessing.Normalizer(norm="l2")),
             ]
         )
     

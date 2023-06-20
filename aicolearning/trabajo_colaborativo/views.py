@@ -1,3 +1,10 @@
+'''
+AICoLearning
+Herramienta web para la creación de grupos colaborativos asistida por Machine Learning
+Código desarrollado por: Francisco Tejeira Bújez
+Para el Proyecto fin de Grado de Ingeniería Informática de la UNIR
+2023
+'''
 import json
 from django.shortcuts import get_list_or_404, get_object_or_404, redirect, render
 from django.urls import reverse_lazy, reverse
@@ -61,11 +68,6 @@ class VistaConfigurarAgrupamiento(View):
                       context)
 
     def post(self, request, id_modelo_alumnos, num_alumnos, num_alumnos_por_grupo, ids_alumnos):
-        print("\nV ***POST ---- id_modelo_alumnos: ", id_modelo_alumnos)
-
-        #self.caracteristicas = tcu.get_caracteristicas_modelo_alumnos(id_modelo_alumnos)
-
-        print("\nV ***POST ---- Caracteristicas: ", self.caracteristicas)
         form = FormConfigurarAgrupamiento(request.POST)
         # añade las características al formulario
         form.fields["alumnos_por_grupo"].initial = num_alumnos_por_grupo
@@ -77,17 +79,10 @@ class VistaConfigurarAgrupamiento(View):
             num_alumnos_por_grupo = form.cleaned_data['alumnos_por_grupo']
             nombre_agrupamiento = form.cleaned_data['nombre_agrupamiento']
 
-            print("V \n FORMULARIO RECIBIDO: Tipo agrupamiento[" + str(tipo_agrupamiento) + "]\n"+str(caracteristicas))
-            
-            # imprimimos los ids de los alumnos
-            print("V \n IDS ALUMNOS: " + self.cadena_ids_alumnos)
-
             # Obtenemos los ids de las características seleccionadas en el form
             ids_caracteristicas = tcu.get_ids_caracteristicas(id_modelo_alumnos, caracteristicas)
             # Generamos la cadena para pasarla como parámetro
             cadena_ids_caracteristicas = ','.join(str(id_caracteristica) for id_caracteristica in ids_caracteristicas)
-
-            print("V \n IDS CARACTERISTICAS: " + cadena_ids_caracteristicas)
 
             # Generamos la URL para la vista agrupar
             url = reverse('trabajo_colaborativo:agrupar', kwargs={'id_modelo_alumnos': id_modelo_alumnos,
@@ -98,14 +93,10 @@ class VistaConfigurarAgrupamiento(View):
                                                                     'ids_alumnos': self.cadena_ids_alumnos
                                                                     })
             
-            print ("V \n URL: " + url)
-            
             # redirigimos a la vista agrupar
             return HttpResponseRedirect(url)
         else:
             num_alumnos_por_grupo = form.cleaned_data['alumnos_por_grupo']
-            print("V \n FORMULARIO NO VÁLIDO:" + str(form.errors))
-
             # volvemos a la página de configuración de agrupamiento con los datos recibidos para que se solucionen los errores
             url = reverse('trabajo_colaborativo:configurar_agrupamiento', kwargs={'id_modelo_alumnos': id_modelo_alumnos, 
                                                                                   'num_alumnos': num_alumnos, 
@@ -131,8 +122,6 @@ class VistaAgrupar(View):
 
         # llama al método setup de la clase padre
         super().setup(request, *args, **kwargs)
-
-        print("\nVistaAgrupar ***setup ---- kwargs: ", kwargs)
 
         # Obtenemos los datos necesarios
         self.id_modelo_alumnos = kwargs["id_modelo_alumnos"]
@@ -170,23 +159,15 @@ class VistaAgrupar(View):
         
         # Obtenemos las etiquetas de las características
         self.caracteristicas = tcu.get_etiquetas_caracteristicas(self.id_modelo_alumnos, self.ids_caracteristicas)
-
-        print ("\nVistaAgrupar ***setup ---- ids_alumnos: ", self.ids_alumnos)
-        print ("\nVistaAgrupar ***setup ---- ids_caracteristicas: ", self.ids_caracteristicas)
-        
+ 
     def get(self, request, *args, **kwargs):
 
         # Se prepara un dataframe con los datos de los alumnos y las características
-        print("\n PREPARANDO Dataframe")
         df = tcu.generar_dataframe(self.id_modelo_alumnos,self.ids_alumnos, self.caracteristicas)
-        print("\n DataFrame: \n", df)
-        
         # REALIZAR AGRUPAMIENTO    
         TM = tcu.agrupar(self.num_alumnos_por_grupo, self.tipo_agrupamiento, df, True, tcu.log)
         
         # Guardamos el agrupamiento en la base de datos
-        print ("\nEQUIPOS CREADOS: \n", TM.equiposGenerados)
-
         id_agrupamiento = tcu.guardar_equipos(TM, self.nombre_agrupamiento, self.id_modelo_alumnos, self.ids_alumnos, self.tipo_agrupamiento, self.ids_caracteristicas)
                                                                               
         # Convertimos la lista ids_caracteristicas a una cadena separada por comas
@@ -239,7 +220,6 @@ class VistaEquipo(ListView):
         # recorremos los alumnos del queryset
         for alumno in context['alumnos']:
             # Extrae los datos del alumno guardados en el modelo
-            print("\n ID ALUMNO: ", alumno.id_alumno)
             datos_alumno = get_list_or_404(DatoModelo, modelo_id=id_modelo_alumnos, id_alumno=alumno.id_alumno)
                 
             # Crea una lista con los datos del alumno
@@ -361,43 +341,34 @@ class VistaEquipos(ListView):
             else:
                 url = reverse('trabajo_colaborativo:ver_equipo', args=[context['agrupamiento'].id, equipo.id, context['mostrar_info'], context['ids_caracteristicas']])
             equipo.url = url
-            print("\nURL: ", url)
-
+            
                 
         return context
 
 class VistaEquiposBORRAR (View):
     def get(self, request, id_agrupamiento, mostrar_info, ids_caracteristicas):
 
-        print("------------------ VistaEquipos ------------------")
         site_url = "http://" + request.META['HTTP_HOST']
 
         # Buscamos el nombre del agrupamiento
         agrupamiento = get_object_or_404(Agrupamiento,id=id_agrupamiento)
-        print ("\nNombre agrupamiento: ", agrupamiento.etiqueta)
-        print ("\n ids_caracteristicas: ", ids_caracteristicas)
-
+        
         # Vamos a enviar una lista de diccionarios con los datos de los equipos
         datos = []
 
         # por cada equipo del agrupamiento, generamos el enlace a la vista de equipo
         for equipo in agrupamiento.equipo_set.all():
-            print ("\nEquipo: ", equipo.nombre)
             # Obtenemos el número de alumnos de ese equipo
             num_alumnos = equipo.alumnos.count()
-
-            print("\n num_alumnos: ", num_alumnos)
 
             if ids_caracteristicas == "":
                 url = reverse('trabajo_colaborativo:ver_equipo', args=[id_agrupamiento, equipo.id, mostrar_info])
             else:
                 url = reverse('trabajo_colaborativo:ver_equipo', args=[id_agrupamiento, equipo.id, mostrar_info, ids_caracteristicas])
 
-            print ("\nURL: ", url)
             datos.append({'nombre_equipo': equipo.nombre, 'num_alumnos': num_alumnos, 'url': site_url+url})
 
         # renderizamos la vista del listado de equipos
-        print (datos)
         return render(request, 'trabajo_colaborativo/ver_equipos.html', {'equipos': datos, 'titulo': agrupamiento.etiqueta})
 
 # Clase para gestionar el listado de agrupamientos
@@ -434,16 +405,13 @@ class VistaAgrupamientos(ListView):
             agrupamiento.url_agrupamiento = url_agrupamiento
 
         
-        print ("\nContexto: ", context)
         return context
 
 class VistaEliminarAgrupamiento(View):
     def get(self, request, id_agrupamiento):
-        print("------------------ VistaEliminarAgrupamiento ------------------")
         # Buscamos el agrupamiento
         agrupamiento = get_object_or_404(Agrupamiento,id=id_agrupamiento)
-        print ("\nNombre agrupamiento: ", agrupamiento.etiqueta)
-
+        
         # Eliminamos el agrupamiento
         agrupamiento.delete()
 

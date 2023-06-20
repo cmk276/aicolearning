@@ -1,3 +1,10 @@
+'''
+AICoLearning
+Herramienta web para la creación de grupos colaborativos asistida por Machine Learning
+Código desarrollado por: Francisco Tejeira Bújez
+Para el Proyecto fin de Grado de Ingeniería Informática de la UNIR
+2023
+'''
 # Rutinas útiles para la gestión de la aplicación trabajo_colaborativo
 
 from django.db import models
@@ -25,12 +32,8 @@ TIPOS_AGRUPAMIENTO = [
 def get_caracteristicas_modelo_alumnos(id_modelo_alumnos):
         
         # extrae las lista de características del modelo de alumnos
-
-        print("Voy a extraer las caracrerísticas de id_modelo_alumnos: ", id_modelo_alumnos)
         
         caracteristicas=get_list_or_404(mda_models.Caracteristica, definicion_modelo_id=id_modelo_alumnos)
-
-        print ("Características: ", caracteristicas)
 
         lista_caracteristicas = []
         # recorre las características	
@@ -108,9 +111,7 @@ def get_ids_alumnos_modelo(id_modelo_alumnos):
 # Lee las características de un modelo de alumnos y devuelve el DataFrame
 # asignando el tipo de dato adecuado a cada columna
 def cambiar_tipos_columnas(df, id_modelo_alumnos, caracteristicas):
-       # obtener las características del modelo de alumnos
-
-        print("\nVoy a cambiar los tipos de columnas de id_modelo_alumnos: ", id_modelo_alumnos)
+        # obtener las características del modelo de alumnos
 
         caracteristicas_modelo_alumnos = get_list_or_404(mda_models.Caracteristica, definicion_modelo_id=id_modelo_alumnos)
 
@@ -120,28 +121,23 @@ def cambiar_tipos_columnas(df, id_modelo_alumnos, caracteristicas):
                 if caracteristica.etiqueta in caracteristicas:
                         if caracteristica.tipo == mda_models.CNUMERICA:
                                 # Cambia el tipo de dato de la columna a numérico
-                                print ("\ncambiando tipo de dato de la columna " + caracteristica.etiqueta + " a numérico")
-                                df[caracteristica.etiqueta] = pd.to_numeric(df[caracteristica.etiqueta])
+                               df[caracteristica.etiqueta] = pd.to_numeric(df[caracteristica.etiqueta])
                         
                         elif caracteristica.tipo == mda_models.CNO_ORDENADA:
                                 # Cambia el tipo de dato de la columna a categoría no ordenada
-                                print ("\ncambiando tipo de dato de la columna " + caracteristica.etiqueta + " a categoría no ordenada")
                                 df[caracteristica.etiqueta] = pd.Categorical(df[caracteristica.etiqueta], ordered=False)
                         
                         elif caracteristica.tipo == mda_models.CBOOLEANA:
                                 # Cambia el tipo de dato de la columna a booleano
-                                print ("\ncambiando tipo de dato de la columna " + caracteristica.etiqueta + " a booleano")
                                 df[caracteristica.etiqueta] = df[caracteristica.etiqueta].astype('bool')
 
                         # Si la característica es de tipo texto
                         elif caracteristica.tipo == mda_models.CTEXTO:
                                 # Cambia el tipo de dato de la columna a texto
-                                print ("\ncambiando tipo de dato de la columna " + caracteristica.etiqueta + " a texto")
                                 df[caracteristica.etiqueta] = df[caracteristica.etiqueta].astype('str')
                         
                         elif caracteristica.tipo == mda_models.CORDENADA:
                                 # lee los valores de la característica de valorseleccion
-                                print("\ncammbiando tipo de dato de la columna " + caracteristica.etiqueta + " a categoría ordenada")
                                 valores_seleccion = get_list_or_404(mda_models.ValorSeleccion, caracteristica_id=caracteristica.id) 
                                 valores = []
                                 # recorre los valores de la característica de valorseleccion
@@ -149,11 +145,8 @@ def cambiar_tipos_columnas(df, id_modelo_alumnos, caracteristicas):
                                         # añade los valores a la lista
                                         valores.append(valor_seleccion.etiqueta)
                                
-                                print ("\n____valores____:", valores)
-
                                 # cambia el tipo de dato de la columna a categoría ordenada
                                 df[caracteristica.etiqueta] = pd.Categorical(df[caracteristica.etiqueta], ordered=True, categories=valores)
-                        
 
         return df        
 
@@ -165,8 +158,6 @@ def generar_dataframe(id_modelo_alumnos, ids_alumnos, caracteristicas):
         # Crea un Data vacío
         # Las cabeceras del DataFrame son las características
         df = pd.DataFrame(columns=caracteristicas)
-        
-        print ("\nTIPOS DE LAS COLUMNAS antes\n",df.dtypes)
         
         # Recorre los ids de los alumnos
         for id_alumno in ids_alumnos:
@@ -200,8 +191,6 @@ def generar_dataframe(id_modelo_alumnos, ids_alumnos, caracteristicas):
         df = cambiar_tipos_columnas(df, id_modelo_alumnos, caracteristicas)
 
         # Devuelve el DataFrame
-        print ("\nTIPOS DE LAS COLUMNAS despues\n",df.dtypes)
-
         return df
 
 def add_nombres_alumnos (df, ids_alumnos):
@@ -270,14 +259,11 @@ def guardar_equipos(TM : teammaker.TeamMaker, nombre_agrupamiento, id_modelo, id
                 # Guarda el agrupamiento
                 Agrupamiento.save()
                 # Si el tipo de agrupamiento no es aleatorio, añade las caracteristicas
-                print("\n ============= Tipo Agrupamiento antes de guardar características en agrupamiento =============", tipo_agrupamiento )
                 if tipo_agrupamiento != "aleatorio":
                         # Añadimos las caracteristicas al agrupamiento
                         for id_caracteristica in ids_caracteristicas:
                                 Caracteristica = mda_models.Caracteristica.objects.get(id=id_caracteristica)
                                 Agrupamiento.caracteristicas.add(Caracteristica)
-
-                print ("\n Agrupamiento creado: ", Agrupamiento.etiqueta)
 
                 # recorremos los equipos generados en TM
                 num_equipo = 1
@@ -292,9 +278,7 @@ def guardar_equipos(TM : teammaker.TeamMaker, nombre_agrupamiento, id_modelo, id
                         # Añadimos el equipo al agrupamiento
                         Agrupamiento.equipos.add(Equipo)
 
-                        print ("\n Equipo creado", Equipo.nombre)
-
-                        # recorremos los alumnos del equipo
+                         # recorremos los alumnos del equipo
                         for id_alumno in def_equipo:
                                 alumno_equipo = ids_alumnos[id_alumno]
 
@@ -303,8 +287,6 @@ def guardar_equipos(TM : teammaker.TeamMaker, nombre_agrupamiento, id_modelo, id
                                 # Buscamos el alumno_equipo en la base de datos
                                 Alumno = cde_models.Alumno.objects.get(id_alumno=alumno_equipo)
 
-                                
-                                print ("\nAlumno encontrado: ", Alumno)
                                 Equipo.alumnos.add(Alumno)
 
                         # Guardamos el equipo después de añadirle los alumnos

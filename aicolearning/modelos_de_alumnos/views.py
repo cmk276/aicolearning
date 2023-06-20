@@ -1,3 +1,10 @@
+'''
+AICoLearning
+Herramienta web para la creación de grupos colaborativos asistida por Machine Learning
+Código desarrollado por: Francisco Tejeira Bújez
+Para el Proyecto fin de Grado de Ingeniería Informática de la UNIR
+2023
+'''
 from django.shortcuts import get_object_or_404,  get_list_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
@@ -59,7 +66,6 @@ def guardar_filas(df, id_modelo):
         if not models.Alumno.objects.filter(id_alumno=id_alumno).exists():
             alumno = models.Alumno(id_alumno=id_alumno, nombre=nombre_alumno, apellido1=apellido_1, apellido2=apellido_2)
             alumno.save()
-            print ("\n Creando alumno id_alumno: "+str(id_alumno))
 
         # Cargamos el modelo id_modelo
         modelo = DefinicionModelo.objects.get(id=id_modelo)
@@ -71,7 +77,6 @@ def guardar_filas(df, id_modelo):
         # Creamos un objeto DatoModelo con los datos del alumno
         dato_modelo = DatoModelo(id_alumno=id_alumno, datos=datos_modelo, modelo=modelo)
         dato_modelo.save()
-        print ("\n *** Guardando datos del alumno id_alumno: "+str(id_alumno))
 
 
 #Crear un modelo de alumnos a partir de un dataframe
@@ -131,14 +136,8 @@ class VistaModelo(ListView):
         # Recupera el modelo
         modelo = DefinicionModelo.objects.get(id=self.kwargs['id_modelo'])
 
-        print ("\n *** Recuperando modelo: "+str(modelo.nombre))
-
         context['modelo'] = modelo
         for dato in context['datos_modelo']:
-            print ("\n *** Recuperando alumno: "+str(dato.id_alumno))
             dato.alumno = models.Alumno.objects.get(id_alumno=dato.id_alumno)
-            
-            print ("\n *** Recuperando datos del alumno: "+str(dato.cadena_datos()))
-
         
         return context
