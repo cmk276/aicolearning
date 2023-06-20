@@ -75,8 +75,8 @@ def guardar_filas(df, id_modelo):
 
 
 #Crear un modelo de alumnos a partir de un dataframe
-def crear_modelo_alumnos(df, nombre_modelo):
-    modelo = DefinicionModelo(nombre=nombre_modelo)
+def crear_modelo_alumnos(df, nombre_modelo, descripcion_modelo):
+    modelo = DefinicionModelo(nombre=nombre_modelo, descripcion=descripcion_modelo)
     modelo.save()
 
     # extraemos las cuatro primeras columnas del dataframe
@@ -97,18 +97,19 @@ def importar(request):
         if form.is_valid():
             nombre_modelo = form.cleaned_data['nombre_modelo']
             fichero_csv = form.cleaned_data['fichero_csv']
+            descripcion_modelo = form.cleaned_data['descripcion']
             
             # leer el fichero csv y convertirlo a un pandas dataframe
             df = leer_csv(fichero_csv)
             
             # crrear un modelo de alumnos a partir del dataframe
-            modelo = crear_modelo_alumnos(df, nombre_modelo)
+            modelo = crear_modelo_alumnos(df, nombre_modelo, descripcion_modelo)
 
             # guardar las filas del dataframe en la tabla DatoModelo
             guardar_filas(df, modelo)
             
             # va la vista de modelos de alumnos
-            return HttpResponseRedirect(reverse('modelos_de_alumnos:modelo',args=[modelo]))
+            return HttpResponseRedirect(reverse('modelos_de_alumnos:vista_modelo',args=[modelo]))
     else:
         form = FormImportarModelo()
     
