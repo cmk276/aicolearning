@@ -289,7 +289,8 @@ class TMKmeans (TeamMaker):
         # Creamos un pipeline con el procesador configurado
         self._Pipeline = Pipeline(
             steps = [
-                ("procesarCategorias",procesadorColumnas)
+                ("procesarCategorias",procesadorColumnas),
+                ("normalizar", preprocessing.Normalizer(norm="l2")),
             ]
         )
     
@@ -301,6 +302,7 @@ class TMKmeans (TeamMaker):
         
         # Marcamos los alumnos como procesados
         self._datasetProcesado = True
+
 
 
     def _equilibrar_clusters(self, clusters, maxElementos):
@@ -341,6 +343,7 @@ class TMKmeans (TeamMaker):
             self._log(msgProceso,"Procesando las características de los alumnos")
             self._procesar_dataset()
             self._log(msgProceso,"Características de alumnos procesadas")
+            self._log(msgProceso,"DataSet Normalizado" + str(self.alumnos))
        
         if (len(self.equiposFijos)==0):
             #No hay equipos generados fijos, se procesan todos los alumnos
